@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Creator, Prisma } from 'generated/prisma';
+import { Creator, Prisma } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
 
 @Injectable()
@@ -7,11 +7,11 @@ export class CreatorRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(data: Prisma.CreatorCreateInput): Promise<Creator> {
-    return await this.prisma.creator.create({ data });
+    return this.prisma.creator.create({ data });
   }
 
   async findByEmail(email: string): Promise<Creator | null> {
-    return await this.prisma.creator.findUnique({ where: { email } });
+    return this.prisma.creator.findUnique({ where: { email } });
   }
 
   async findByDni(nationalId: string): Promise<Creator | null> {
