@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Creator } from 'generated/prisma';
+import { Creator } from '@prisma/client';
 
 @Injectable()
 export class KycProviderService {
