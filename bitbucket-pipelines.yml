@@ -1,0 +1,27 @@
+image: node:18
+
+definitions:
+  services:
+    postgres:
+      image: postgres:15
+      environment:
+        POSTGRES_DB: pina_dev
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+
+pipelines:
+  default:
+    - step:
+        name: Build, Lint & Test
+        services:
+          - postgres
+        caches:
+          - node
+        script:
+          - cp .env.example .env
+          - yarn install
+          - yarn prisma generate
+          - yarn prisma migrate deploy
+          - yarn lint
+          - yarn build
+          - yarn test
