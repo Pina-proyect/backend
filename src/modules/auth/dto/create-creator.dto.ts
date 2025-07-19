@@ -14,8 +14,8 @@ export class CreateCreatorDto {
   birthDate: string; // validación básica
 
   @IsNotEmpty()
-  idPhoto: string; // será una URL a S3
+  photoPath: string; // será una URL a S3
 
   @IsNotEmpty()
-  selfie: string; // será una URL a S3
+  selfiePath: string; // será una URL a S3
 }

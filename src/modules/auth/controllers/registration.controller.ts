@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import { CreateCreatorDto } from '../dto/create-creator.dto';
 import { KycResponse } from '../interfaces/kyc-response.interface';
 import { RegistrationService } from '../services/registration.service';
+import { RetryVerificationDto } from '../dto/retry-verification.dto';
 
 @Controller('/registro')
 export class RegistrationController {
@@ -17,14 +18,12 @@ export class RegistrationController {
     return this.registrationService.getStatus(id);
   }
 
-  @Post('/kyc/reintento')
-  async retry(
-    @Body() body: { userId: string; selfie: string; idPhoto: string },
-  ) {
+  @Put('/kyc/reintento')
+  async retry(@Body() body: RetryVerificationDto) {
     return this.registrationService.retryVerification(
       body.userId,
-      body.selfie,
-      body.idPhoto,
+      body.selfiePath,
+      body.photoPath,
     );
   }
 }
