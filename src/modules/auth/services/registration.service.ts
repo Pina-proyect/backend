@@ -16,7 +16,7 @@ export class RegistrationService {
       birthDate: new Date(data.birthDate),
       verificationStatus: 'pending',
       selfiePath: '', // to be replaced with actual S3 path
-      idPhotoPath: '', // to be replaced with actual S3 path
+      photoPath: '', // to be replaced with actual S3 path
     });
 
     return {
