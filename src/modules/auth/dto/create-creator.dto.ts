@@ -11,11 +11,11 @@ export class CreateCreatorDto {
   nationalId: string;
 
   @IsDateString()
-  birthDate: string;
+  birthDate: string; // validación básica
 
   @IsNotEmpty()
-  idPhoto: string;
+  photoPath: string; // será una URL a S3
 
   @IsNotEmpty()
-  selfie: string;
+  selfiePath: string; // será una URL a S3
 }
