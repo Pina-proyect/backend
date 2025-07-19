@@ -48,8 +48,8 @@ export class RegistrationService {
       nationalId: data.nationalId,
       birthDate: new Date(data.birthDate),
       verificationStatus: 'pending',
-      selfiePath: '', // to be replaced with actual S3 path
-      idPhotoPath: '', // to be replaced with actual S3 path
+      selfiePath: data.selfiePath,
+      photoPath: data.photoPath,
     });
 
     // simular verificación asíncrona
@@ -85,12 +85,12 @@ export class RegistrationService {
 
   async retryVerification(
     userId: string,
-    selfie: string,
-    idPhoto: string,
+    selfiePath: string,
+    photoPath: string,
   ): Promise<KycResponse> {
     await this.creatorRepository.updateVerification(userId, {
-      selfiePath: selfie,
-      idPhotoPath: idPhoto,
+      selfiePath: selfiePath,
+      photoPath: photoPath,
       verificationStatus: 'pending',
     });
 
