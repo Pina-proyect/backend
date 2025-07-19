@@ -53,7 +53,7 @@ export class RegistrationService {
     });
 
     // simular verificación asíncrona
-    this.verifyInBackground(creator.id);
+    void this.verifyInBackground(creator.id);
 
     return {
       status: 'pending',
@@ -94,7 +94,7 @@ export class RegistrationService {
       verificationStatus: 'pending',
     });
 
-    this.verifyInBackground(userId);
+    void this.verifyInBackground(userId);
 
     return {
       userId,
