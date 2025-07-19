@@ -6,7 +6,10 @@ import {
 import { differenceInYears } from 'date-fns';
 import { CreateCreatorDto } from '../dto/create-creator.dto';
 import { CreatorRepository } from '../repositories/creator.repository';
-import { KycResponse } from '../interfaces/kyc-response.interface';
+import {
+  KycResponse,
+  VerificationStatus,
+} from '../interfaces/kyc-response.interface';
 import { KycProviderService } from './kycprovider.service';
 
 @Injectable()
@@ -76,10 +79,11 @@ export class RegistrationService {
   async getStatus(userId: string): Promise<KycResponse> {
     const creator = await this.creatorRepository.findById(userId);
     if (!creator) throw new NotFoundException('Usuario no encontrado');
+    const status = creator.verificationStatus as VerificationStatus;
     return {
       userId,
-      status: creator.verificationStatus as any,
-      message: `Estado: ${creator.verificationStatus}`,
+      status,
+      message: `Estado: ${status}`,
     };
   }
 
