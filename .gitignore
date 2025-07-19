@@ -57,8 +57,5 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 >>>>>>> 05bd0c1 (initial commit of full repository)
 
 # Prisma
-.env
 prisma/dev.db
-prisma/migrations/
-
 /generated/prisma
