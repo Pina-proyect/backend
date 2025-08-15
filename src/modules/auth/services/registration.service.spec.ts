@@ -149,26 +149,34 @@ describe('RegistrationService', () => {
     });
 
     it('should successfully start registration and return pending status', async () => {
-      // Configuramos los mocks para un escenario exitoso
       creatorRepository.findByEmail.mockResolvedValue(null);
       creatorRepository.findByDni.mockResolvedValue(null);
       creatorRepository.create.mockResolvedValue(mockCreator);
-      creatorRepository.findById.mockResolvedValue(mockCreator); // Para el verifyInBackground
-      kycProvider.verifyDocuments.mockResolvedValue('verified'); // Para el verifyInBackground (no await en el test)
+      creatorRepository.findById.mockResolvedValue(mockCreator);
+      kycProvider.verifyDocuments.mockResolvedValue('verified');
 
       const result = await service.startRegistration(mockCreateCreatorDto);
 
+      // Aserciones sobre llamadas
       expect(creatorRepository.findByEmail).toHaveBeenCalledWith(
         mockCreateCreatorDto.email,
       );
       expect(creatorRepository.findByDni).toHaveBeenCalledWith(
         mockCreateCreatorDto.nationalId,
       );
-      expect(creatorRepository.create).toHaveBeenCalledWith({
+      expect(creatorRepository.create).toHaveBeenCalled();
+
+      // Inspeccionamos el primer llamado al create
+      const calledInput = creatorRepository.create.mock.calls[0][0];
+
+      // Verificá el tipo de birthDate sin usar expect.any(Date)
+      expect(calledInput.birthDate).toBeInstanceOf(Date);
+
+      // Verificá el resto de los campos
+      expect(calledInput).toMatchObject({
         fullName: mockCreateCreatorDto.fullName,
         email: mockCreateCreatorDto.email,
         nationalId: mockCreateCreatorDto.nationalId,
-        birthDate: expect.any(Date), // Esperamos una instancia de Date
         verificationStatus: 'pending',
         selfiePath: mockCreateCreatorDto.selfiePath,
         photoPath: mockCreateCreatorDto.photoPath,
@@ -185,8 +193,12 @@ describe('RegistrationService', () => {
       // Mock: findById devuelve null
       creatorRepository.findById.mockResolvedValue(null);
 
-      // @ts-ignore: forzamos a llamar al método privado para el test
-      await service['verifyInBackground']('fake-id');
+      type PrivateAPI = {
+        verifyInBackground(id: string): Promise<void>;
+      };
+
+      // Llamá al método privado SIN any y sin @ts-ignore
+      await (service as unknown as PrivateAPI).verifyInBackground('fake-id');
 
       expect(creatorRepository.findById).toHaveBeenCalledWith('fake-id');
       expect(kycProvider.verifyDocuments).not.toHaveBeenCalled();
@@ -240,7 +252,7 @@ describe('RegistrationService', () => {
 
     it('debería actualizar el estado a pending, llamar a verifyInBackground y devolver la respuesta', async () => {
       // Arrange
-      creatorRepository.updateVerification.mockResolvedValue(undefined as any);
+      creatorRepository.updateVerification.mockResolvedValue(mockCreator);
 
       // Espiamos el método privado verifyInBackground para asegurar que se invoque
       const spyVerify = jest

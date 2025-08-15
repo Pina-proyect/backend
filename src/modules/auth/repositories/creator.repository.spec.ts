@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CreatorRepository } from './creator.repository';
 import { PrismaService } from 'prisma/prisma.service';
-import type { Creator } from '@prisma/client';
+import type { Creator, Prisma } from '@prisma/client';
 
 describe('CreatorRepository', () => {
   let repository: CreatorRepository;
@@ -30,7 +30,7 @@ describe('CreatorRepository', () => {
   };
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -50,7 +50,7 @@ describe('CreatorRepository', () => {
     it('debería delegar en prisma.creator.create y devolver el creador', async () => {
       prismaMock.creator.create.mockResolvedValueOnce(sampleCreator);
 
-      const data = {
+      const data: Prisma.CreatorCreateInput = {
         fullName: sampleCreator.fullName,
         email: sampleCreator.email,
         nationalId: sampleCreator.nationalId,
@@ -60,7 +60,9 @@ describe('CreatorRepository', () => {
         photoPath: sampleCreator.photoPath,
       };
 
-      const result = await repository.create(data as any);
+      prismaMock.creator.create.mockResolvedValueOnce(sampleCreator);
+
+      const result = await repository.create(data);
 
       expect(prismaMock.creator.create).toHaveBeenCalledWith({ data });
       expect(result).toEqual(sampleCreator);
@@ -69,9 +71,17 @@ describe('CreatorRepository', () => {
     it('debería propagar errores de prisma', async () => {
       prismaMock.creator.create.mockRejectedValueOnce(new Error('DB error'));
 
-      await expect(
-        repository.create({ email: 'x@y.com' } as any),
-      ).rejects.toThrow('DB error');
+      const validInput: Prisma.CreatorCreateInput = {
+        fullName: 'X',
+        email: 'x@y.com',
+        nationalId: '99999999',
+        birthDate: new Date('1990-01-01'),
+        verificationStatus: 'pending',
+        selfiePath: '/s.jpg',
+        photoPath: '/p.jpg',
+      };
+
+      await expect(repository.create(validInput)).rejects.toThrow('DB error');
     });
   });
 

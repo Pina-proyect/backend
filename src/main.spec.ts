@@ -1,3 +1,4 @@
+import type { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { bootstrap } from './main';
 import { AppModule } from './app.module';
@@ -13,31 +14,35 @@ jest.mock('@nestjs/core', () => ({
 }));
 
 describe('main.ts Bootstrap', () => {
-  let mockApp: {
-    useGlobalPipes: jest.Mock;
-    setGlobalPrefix: jest.Mock;
-    listen: jest.Mock;
-  };
+  type AppMock = jest.Mocked<
+    Pick<INestApplication, 'useGlobalPipes' | 'setGlobalPrefix' | 'listen'>
+  >;
+
+  let mockApp: AppMock;
 
   beforeEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+
     mockApp = {
       useGlobalPipes: jest.fn(),
       setGlobalPrefix: jest.fn(),
       listen: jest.fn(),
     };
 
-    (NestFactory.create as jest.Mock).mockResolvedValue(mockApp);
+    jest
+      .spyOn(NestFactory, 'create')
+      .mockResolvedValue(mockApp as unknown as INestApplication);
   });
 
   it('should create application', async () => {
     await bootstrap();
-
-    expect(NestFactory.create).toHaveBeenCalledWith(AppModule);
+    const createSpy = jest.spyOn(NestFactory, 'create');
+    expect(createSpy).toHaveBeenCalledWith(AppModule);
   });
 
   it('should set global prefix', async () => {
     await bootstrap();
-
     expect(mockApp.setGlobalPrefix).toHaveBeenCalledWith('pina');
   });
 });

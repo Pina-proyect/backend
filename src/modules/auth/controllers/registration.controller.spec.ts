@@ -3,17 +3,25 @@ import { RegistrationController } from './registration.controller';
 import { RegistrationService } from '../services/registration.service';
 import { CreateCreatorDto } from '../dto/create-creator.dto';
 import { RetryVerificationDto } from '../dto/retry-verification.dto';
+import type { KycResponse } from '../interfaces/kyc-response.interface';
 
 describe('RegistrationController', () => {
   let controller: RegistrationController;
-  let service: jest.Mocked<RegistrationService>;
+  // Mockeamos SOLO lo que usamos del service, con tipos fuertes (nada de any)
+  type ServiceMock = jest.Mocked<
+    Pick<
+      RegistrationService,
+      'startRegistration' | 'getStatus' | 'retryVerification'
+    >
+  >;
+  let service: ServiceMock;
 
-  // Mock del service con Jest
-  const mockRegistrationService: jest.Mocked<RegistrationService> = {
+  // Instancia de mock concreta, sin `as any`
+  const mockRegistrationService: ServiceMock = {
     startRegistration: jest.fn(),
     getStatus: jest.fn(),
     retryVerification: jest.fn(),
-  } as any;
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -25,6 +33,7 @@ describe('RegistrationController', () => {
 
     controller = module.get<RegistrationController>(RegistrationController);
     service = module.get(RegistrationService);
+
     jest.clearAllMocks();
   });
 
@@ -34,28 +43,43 @@ describe('RegistrationController', () => {
 
   describe('POST /registro/creadora', () => {
     it('debe llamar a startRegistration y devolver su resultado', async () => {
-      const dto: CreateCreatorDto = {
-        // completa los campos que tengas en tu DTO
-      } as any;
+      // Si no querés completar el DTO, casteá desde unknown (no dispara no-unsafe-*):
+      const dto = {} as unknown as CreateCreatorDto;
 
-      const kycResp = { status: 'PENDING', id: 'abc' } as any;
-      service.startRegistration.mockResolvedValueOnce(kycResp);
+      const kycResp: KycResponse = {
+        status: 'pending',
+        message: 'Proceso iniciado',
+        userId: 'abc',
+      };
+
+      // Evita unbound-method: trabajá con el spy
+      const startSpy = jest
+        .spyOn(service, 'startRegistration')
+        .mockResolvedValueOnce(kycResp);
 
       const result = await controller.register(dto);
 
-      expect(service.startRegistration).toHaveBeenCalledWith(dto);
+      expect(startSpy).toHaveBeenCalledWith(dto);
       expect(result).toBe(kycResp);
     });
   });
 
   describe('GET /registro/kyc/estado/:id', () => {
     it('debe llamar a getStatus con el id y devolver su resultado', async () => {
-      service.getStatus.mockResolvedValueOnce({ status: 'APPROVED' } as any);
+      const resp: KycResponse = {
+        status: 'verified',
+        message: 'Aprobado correctamente',
+        userId: 'user-123',
+      };
+
+      const getStatusSpy = jest
+        .spyOn(service, 'getStatus')
+        .mockResolvedValueOnce(resp);
 
       const result = await controller.getEstado('user-123');
 
-      expect(service.getStatus).toHaveBeenCalledWith('user-123');
-      expect(result).toEqual({ status: 'APPROVED' });
+      expect(getStatusSpy).toHaveBeenCalledWith('user-123');
+      expect(result).toEqual(resp);
     });
   });
 
@@ -67,12 +91,19 @@ describe('RegistrationController', () => {
         photoPath: '/tmp/photo.jpg',
       };
 
-      const retryResp = { status: 'RETRYING' } as any;
-      service.retryVerification.mockResolvedValueOnce(retryResp);
+      const retryResp: KycResponse = {
+        status: 'rejected',
+        message: 'Documentos inválidos',
+        userId: 'u1',
+      };
+
+      const retrySpy = jest
+        .spyOn(service, 'retryVerification')
+        .mockResolvedValueOnce(retryResp);
 
       const result = await controller.retry(body);
 
-      expect(service.retryVerification).toHaveBeenCalledWith(
+      expect(retrySpy).toHaveBeenCalledWith(
         'u1',
         '/tmp/selfie.jpg',
         '/tmp/photo.jpg',
