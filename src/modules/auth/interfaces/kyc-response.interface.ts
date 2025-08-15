@@ -1,5 +1,7 @@
+export type VerificationStatus = 'pending' | 'verified' | 'rejected';
+
 export interface KycResponse {
-  status: 'pending' | 'verified' | 'rejected';
+  status: VerificationStatus;
   message: string;
   userId: string;
 }
