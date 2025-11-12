@@ -3,6 +3,7 @@ import { RegistrationService } from './registration.service';
 import { CreatorRepository } from '../repositories/creator.repository';
 import { KycProviderService } from './kycprovider.service';
 import { CreateCreatorDto } from '../dto/create-creator.dto';
+import { ConfigService } from '@nestjs/config';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 // --- Mocks para las dependencias ---
@@ -69,6 +70,10 @@ describe('RegistrationService', () => {
         {
           provide: KycProviderService, // Cuando Nest necesite KycProviderService
           useValue: kycProviderServiceMock, // usa nuestra versión mock
+        },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue(undefined) },
         },
       ],
     }).compile();

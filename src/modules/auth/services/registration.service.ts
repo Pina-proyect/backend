@@ -4,6 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { differenceInYears } from 'date-fns';
+import { ConfigService } from '@nestjs/config';
+import * as bcrypt from 'bcrypt';
 import { CreateCreatorDto } from '../dto/create-creator.dto';
 import { CreatorRepository } from '../repositories/creator.repository';
 import {
@@ -17,6 +19,7 @@ export class RegistrationService {
   constructor(
     private readonly creatorRepository: CreatorRepository,
     private readonly kycProvider: KycProviderService,
+    private readonly config: ConfigService,
   ) {}
 
   async startRegistration(data: CreateCreatorDto): Promise<KycResponse> {
@@ -47,8 +50,11 @@ export class RegistrationService {
 
     // Si password viene informada, la hasheamos antes de persistir
     // Esto evita almacenar texto plano y prepara el login convencional.
+    // Obtenemos salt rounds desde configuración (BCRYPT_SALT_ROUNDS), por defecto 10
+    const saltRoundsRaw = this.config.get<string>('BCRYPT_SALT_ROUNDS');
+    const saltRounds = saltRoundsRaw ? Number(saltRoundsRaw) : 10;
     const hashedPassword = data.password
-      ? await (await import('bcrypt')).hash(data.password, 10)
+      ? await bcrypt.hash(data.password, saltRounds)
       : null;
 
     const creator = await this.creatorRepository.create({

@@ -10,7 +10,8 @@ import {
   Res,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Response } from 'express';
+import { Response, Request } from 'express';
+import type { CookieOptions } from 'express';
 import type { Creator } from '@prisma/client';
 import { AuthService } from '../services/auth.service';
 import { LoginCreatorDto } from '../dto/login-creator.dto';
@@ -26,12 +27,31 @@ import { RefreshTokenDto } from '../dto/refresh-token.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  // Nombre del cookie para el refresh token
+  private readonly REFRESH_COOKIE = 'refresh_token';
+  // Opciones comunes para el cookie de refresh (HttpOnly)
+  private cookieOptions(): CookieOptions {
+    return {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+    };
+  }
+
   // --- Endpoint de Login Convencional ---
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() loginDto: LoginCreatorDto): Promise<LoginResponseDto> {
-    // Valida credenciales y retorna tokens
-    return this.authService.login(loginDto);
+  async login(
+    @Body() loginDto: LoginCreatorDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<LoginResponseDto> {
+    // Valida credenciales
+    const tokens = await this.authService.login(loginDto);
+    // Envía el refresh token en cookie HttpOnly
+    res.cookie(this.REFRESH_COOKIE, tokens.refreshToken, this.cookieOptions());
+    // Retorna el access token en el body
+    return { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
   }
 
   // --- ENDPOINTS DE GOOGLE OAUTH ---
@@ -58,11 +78,11 @@ export class AuthController {
     // Generamos tokens JWT para el usuario
     const tokens = this.authService.generateTokens(creator);
 
-    // Redirigimos al frontend con los tokens (Zustand los debe almacenar)
+    // Seteamos refresh token en cookie HttpOnly
+    res.cookie(this.REFRESH_COOKIE, tokens.refreshToken, this.cookieOptions());
+    // Redirigimos al frontend con el access token únicamente
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-    res.redirect(
-      `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
-    );
+    res.redirect(`${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}`);
   }
 
   // --- ENDPOINTS DE REFRESH Y LOGOUT ---
@@ -72,8 +92,15 @@ export class AuthController {
    */
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refresh(@Body() dto: RefreshTokenDto): Promise<LoginResponseDto> {
-    return this.authService.refreshTokens(dto);
+  async refresh(
+    @Req() req: Request,
+    @Body() dto: RefreshTokenDto,
+  ): Promise<LoginResponseDto> {
+    const tokenFromCookie = req.cookies?.[this.REFRESH_COOKIE];
+    const effectiveDto: RefreshTokenDto = {
+      refreshToken: tokenFromCookie ?? dto?.refreshToken,
+    };
+    return this.authService.refreshTokens(effectiveDto);
   }
 
   /**
@@ -81,7 +108,11 @@ export class AuthController {
    */
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async logout(@Body() dto: RefreshTokenDto): Promise<void> {
-    await this.authService.logout(dto);
+  async logout(@Req() req: Request, @Body() dto: RefreshTokenDto): Promise<void> {
+    const tokenFromCookie = req.cookies?.[this.REFRESH_COOKIE];
+    const effectiveDto: RefreshTokenDto = {
+      refreshToken: tokenFromCookie ?? dto?.refreshToken,
+    };
+    await this.authService.logout(effectiveDto);
   }
 }
