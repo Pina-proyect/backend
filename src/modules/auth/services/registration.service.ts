@@ -45,6 +45,12 @@ export class RegistrationService {
       );
     }
 
+    // Si password viene informada, la hasheamos antes de persistir
+    // Esto evita almacenar texto plano y prepara el login convencional.
+    const hashedPassword = data.password
+      ? await (await import('bcrypt')).hash(data.password, 10)
+      : null;
+
     const creator = await this.creatorRepository.create({
       fullName: data.fullName,
       email: data.email,
@@ -53,6 +59,7 @@ export class RegistrationService {
       verificationStatus: 'pending',
       selfiePath: data.selfiePath,
       photoPath: data.photoPath,
+      password: hashedPassword,
     });
 
     // simular verificación asíncrona

@@ -1,4 +1,4 @@
-import { IsDateString, IsEmail, IsNotEmpty } from 'class-validator';
+import { IsDateString, IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateCreatorDto {
   @IsNotEmpty()
@@ -18,4 +18,11 @@ export class CreateCreatorDto {
 
   @IsNotEmpty()
   selfiePath: string; // será una URL a S3
+
+  // Contraseña opcional para registro convencional.
+  // Si está presente, se hasheará en el servicio antes de persistir.
+  @IsOptional()
+  @IsString()
+  @MinLength(8)
+  password?: string;
 }

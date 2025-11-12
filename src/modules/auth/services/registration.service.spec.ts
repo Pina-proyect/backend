@@ -189,6 +189,7 @@ describe('RegistrationService', () => {
         verificationStatus: 'pending',
         selfiePath: mockCreateCreatorDto.selfiePath,
         photoPath: mockCreateCreatorDto.photoPath,
+        password: null,
       });
 
       expect(result).toEqual({
@@ -196,6 +197,28 @@ describe('RegistrationService', () => {
         message: 'Verification started',
         userId: mockCreator.id,
       });
+    });
+
+    it('should hash password when provided and persist hashed value', async () => {
+      // Arrange
+      creatorRepository.findByEmail.mockResolvedValue(null);
+      creatorRepository.findByDni.mockResolvedValue(null);
+      creatorRepository.create.mockResolvedValue(mockCreator);
+
+      const dtoWithPassword = {
+        ...mockCreateCreatorDto,
+        password: 'SuperSecret123',
+      } as any;
+
+      // Act
+      await service.startRegistration(dtoWithPassword);
+
+      // Assert: se llamó a create y el password es un hash (no igual al texto plano)
+      const calledInput = creatorRepository.create.mock.calls[0][0];
+      expect(typeof calledInput.password).toBe('string');
+      expect(calledInput.password).not.toBe(dtoWithPassword.password);
+      // bcrypt genera hashes con prefijo $2b$ o $2a$
+      expect(calledInput.password).toMatch(/^\$2[aby?]\$/);
     });
 
     it('verifyInBackground debería hacer return si no existe el creator', async () => {
