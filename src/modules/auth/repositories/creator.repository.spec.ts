@@ -21,12 +21,17 @@ describe('CreatorRepository', () => {
     id: 'creator-1',
     fullName: 'Juan Perez',
     email: 'juan@example.com',
+    password: null,
+    phone: null,
     nationalId: '12345678',
     birthDate: new Date('2000-01-01'),
+    provider: 'credentials',
+    providerId: null,
     verificationStatus: 'pending',
     selfiePath: '/selfie.jpg',
     photoPath: '/photo.jpg',
     createdAt: new Date('2025-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2025-01-01T00:00:00.000Z'),
   };
 
   beforeEach(async () => {

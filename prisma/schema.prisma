@@ -18,10 +18,24 @@ model Creator {
   id                 String   @id @default(uuid())
   fullName           String
   email              String   @unique
-  nationalId         String   @unique
+  // Contraseña opcional para cuentas OAuth (Google/Facebook)
+  password           String?
+  // Teléfono opcional: proveedores OAuth no lo suministran
+  phone              String?
+  // DNI opcional: se completará en onboarding (para cuentas OAuth)
+  nationalId         String?  @unique
   birthDate          DateTime
+  // Proveedor de autenticación (por defecto credenciales)
+  provider           String   @default("credentials")
+  // ID único proporcionado por el proveedor (Google/Facebook)
+  providerId         String?
   verificationStatus String   @default("pending")
   selfiePath         String?
-  photoPath        String?
+  photoPath          String?
   createdAt          DateTime @default(now())
+  // Marca de actualización automática
+  updatedAt          DateTime @updatedAt
+
+  // Índice para búsqueda por proveedor/ID
+  @@index([provider, providerId])
 }
