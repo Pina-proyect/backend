@@ -4,6 +4,16 @@ Backend del proyecto **PINA**, construido con [NestJS](https://nestjs.com/), [Pr
 
 ---
 
+## 📖 Reglas de Proyecto
+
+Este repositorio sigue las reglas y lineamientos del Proyecto PINA. Consulta el resumen oficial aquí:
+
+- `docs/project_rules.md` (resumen incluído en el repo)
+
+Para el documento completo a nivel workspace, referirse al archivo de reglas mantenido por Arquitectura.
+
+---
+
 ## 🚀 Requisitos
 
 - [Node.js](https://nodejs.org/) v18+ (recomendado)
