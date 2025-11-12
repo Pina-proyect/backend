@@ -1,0 +1,80 @@
+# CI de PINA Backend: ejecuta tests unitarios y e2e con Yarn
+# Este workflow levanta Postgres como servicio, genera Prisma Client,
+# aplica migraciones y corre los tests. No expone secretos.
+
+name: CI
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # Servicio de Postgres para tests. Evita depender de bases locales.
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pina_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d pina_ci"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    # Variables de entorno para la ejecución de tests.
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pina_ci
+      NODE_ENV: test
+
+    steps:
+      # 1) Checkout del código
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2) Configurar Node y Yarn (Berry)
+      - name: Configurar Node y Yarn
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: '**/yarn.lock'
+
+      - name: Habilitar Corepack
+        run: corepack enable
+
+      # 3) Instalar dependencias con Yarn Berry de forma reproducible
+      - name: Instalar dependencias
+        run: yarn install --immutable
+
+      # 4) Esperar que Postgres esté listo
+      - name: Esperar Postgres
+        run: |
+          until pg_isready -h localhost -p 5432 -U postgres; do
+            echo "Postgres aún no está listo. Esperando..."
+            sleep 2
+          done
+
+      # 5) Generar Prisma Client
+      - name: Generar Prisma Client
+        run: yarn prisma generate
+
+      # 6) Aplicar migraciones a la base de pruebas
+      - name: Aplicar migraciones
+        run: yarn prisma migrate deploy
+
+      # 7) Ejecutar tests unitarios
+      - name: Ejecutar tests unitarios
+        run: yarn test --ci
+
+      # 8) Ejecutar tests end-to-end
+      - name: Ejecutar tests e2e
+        run: yarn test:e2e --ci
