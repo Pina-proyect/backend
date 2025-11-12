@@ -27,6 +27,7 @@ describe('CreatorRepository', () => {
     birthDate: new Date('2000-01-01'),
     provider: 'credentials',
     providerId: null,
+    tokenVersion: 0,
     verificationStatus: 'pending',
     selfiePath: '/selfie.jpg',
     photoPath: '/photo.jpg',

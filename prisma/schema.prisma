@@ -29,6 +29,8 @@ model Creator {
   provider           String   @default("credentials")
   // ID único proporcionado por el proveedor (Google/Facebook)
   providerId         String?
+  // Versión de tokens para invalidar refresh tokens en logout
+  tokenVersion       Int      @default(0)
   verificationStatus String   @default("pending")
   selfiePath         String?
   photoPath          String?
@@ -37,5 +39,5 @@ model Creator {
   updatedAt          DateTime @updatedAt
 
   // Índice para búsqueda por proveedor/ID
-  @@index([provider, providerId])
+  @@unique([provider, providerId])
 }

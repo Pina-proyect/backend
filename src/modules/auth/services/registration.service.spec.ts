@@ -32,6 +32,13 @@ describe('RegistrationService', () => {
     birthDate: new Date(mockCreateCreatorDto.birthDate),
     verificationStatus: 'pending',
     createdAt: new Date(),
+    updatedAt: new Date(),
+    // Campos opcionales introducidos por OAuth / nuevos del modelo
+    password: null,
+    phone: null,
+    provider: 'credentials',
+    providerId: null,
+    tokenVersion: 0,
   };
 
   beforeEach(async () => {
@@ -43,6 +50,8 @@ describe('RegistrationService', () => {
       create: jest.fn(),
       findById: jest.fn(),
       updateVerification: jest.fn(),
+      findByProvider: jest.fn(),
+      incrementTokenVersion: jest.fn(),
     };
 
     const kycProviderServiceMock: MockKycProviderService = {
