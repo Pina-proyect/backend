@@ -8,6 +8,7 @@ import {
   UseGuards,
   Req,
   Res,
+  Patch,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Response, Request } from 'express';
@@ -17,6 +18,7 @@ import { AuthService } from '../services/auth.service';
 import { LoginCreatorDto } from '../dto/login-creator.dto';
 import { LoginResponseDto } from '../dto/login-response.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
+import { UpdateProfileDto } from '../dto/update-profile.dto';
 
 /**
  * AuthController
@@ -51,7 +53,10 @@ export class AuthController {
     // Envía el refresh token en cookie HttpOnly
     res.cookie(this.REFRESH_COOKIE, tokens.refreshToken, this.cookieOptions());
     // Retorna el access token en el body
-    return { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
   }
 
   // --- ENDPOINTS DE GOOGLE OAUTH ---
@@ -82,7 +87,9 @@ export class AuthController {
     res.cookie(this.REFRESH_COOKIE, tokens.refreshToken, this.cookieOptions());
     // Redirigimos al frontend con el access token únicamente
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-    res.redirect(`${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}`);
+    res.redirect(
+      `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}`,
+    );
   }
 
   // --- ENDPOINTS DE REFRESH Y LOGOUT ---
@@ -108,11 +115,30 @@ export class AuthController {
    */
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async logout(@Req() req: Request, @Body() dto: RefreshTokenDto): Promise<void> {
+  async logout(
+    @Req() req: Request,
+    @Body() dto: RefreshTokenDto,
+  ): Promise<void> {
     const tokenFromCookie = req.cookies?.[this.REFRESH_COOKIE];
     const effectiveDto: RefreshTokenDto = {
       refreshToken: tokenFromCookie ?? dto?.refreshToken,
     };
     await this.authService.logout(effectiveDto);
+  }
+
+  /**
+   * Actualiza el perfil del usuario autenticado (slug, bio, etc.)
+   * Requiere autenticación JWT
+   */
+  @Patch('profile')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.OK)
+  async updateProfile(
+    @Req() req: Request,
+    @Body() updateProfileDto: UpdateProfileDto,
+  ): Promise<Creator> {
+    // El usuario autenticado está en req.user gracias al AuthGuard
+    const user = req.user as Creator;
+    return this.authService.updateProfile(user.id, updateProfileDto);
   }
 }

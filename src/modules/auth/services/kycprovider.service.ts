@@ -7,6 +7,7 @@ export class KycProviderService {
     await new Promise((r) => setTimeout(r, 2000)); // simula tiempo de análisis
 
     // lógica simplificada: si DNI termina en par, aprueba
+    if (!creator.nationalId) return 'rejected';
     const dniNum = parseInt(creator.nationalId.slice(-1));
     return dniNum % 2 === 0 ? 'verified' : 'rejected';
   }

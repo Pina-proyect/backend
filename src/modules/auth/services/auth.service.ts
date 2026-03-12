@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import type { Creator } from '@prisma/client';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -6,6 +6,7 @@ import { CreatorRepository } from '../repositories/creator.repository';
 import { LoginCreatorDto } from '../dto/login-creator.dto';
 import { LoginResponseDto } from '../dto/login-response.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
+import { UpdateProfileDto } from '../dto/update-profile.dto';
 
 /**
  * AuthService
@@ -34,6 +35,7 @@ export class AuthService {
     providerId: string;
     email: string;
     fullName: string;
+    photoPath?: string | null;
   }): Promise<Creator> {
     // 1. Buscar si el usuario ya existe por su Provider ID
     const user = await this.creatorRepository.findByProvider(
@@ -43,7 +45,9 @@ export class AuthService {
     if (user) return user;
 
     // 2. Si no existe por Provider ID, ¿quizás ya existe por email?
-    const userByEmail = await this.creatorRepository.findByEmail(userData.email);
+    const userByEmail = await this.creatorRepository.findByEmail(
+      userData.email,
+    );
     if (userByEmail) {
       // MVP: no vinculamos automáticamente. Forzamos login convencional.
       throw new UnauthorizedException(
@@ -63,7 +67,7 @@ export class AuthService {
       password: null,
       phone: null,
       selfiePath: null,
-      photoPath: null,
+      photoPath: userData.photoPath || null,
     });
 
     return newUser;
@@ -85,7 +89,9 @@ export class AuthService {
       typeof expiresIn === 'number'
         ? expiresIn
         : (expiresIn as unknown as JwtSignOptions['expiresIn']);
-    const refreshToken = this.jwtService.sign(refreshPayload, { expiresIn: expiresInOpt });
+    const refreshToken = this.jwtService.sign(refreshPayload, {
+      expiresIn: expiresInOpt,
+    });
     return { accessToken, refreshToken };
   }
 
@@ -108,7 +114,10 @@ export class AuthService {
     }
 
     const tokens = this.generateTokens(user);
-    return { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
   }
 
   /**
@@ -126,7 +135,10 @@ export class AuthService {
         throw new UnauthorizedException('Refresh token inválido');
       }
       const tokens = this.generateTokens(user);
-      return { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
+      return {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      };
     } catch {
       throw new UnauthorizedException('Refresh token inválido');
     }
@@ -146,5 +158,28 @@ export class AuthService {
       // Para evitar enumeración de usuarios, respondemos 401 si falla.
       throw new UnauthorizedException('Refresh token inválido');
     }
+  }
+
+  /**
+   * updateProfile
+   * Actualiza el perfil del usuario autenticado (slug, bio, etc.)
+   */
+  async updateProfile(userId: string, updateData: UpdateProfileDto): Promise<Creator> {
+    // Verificar que el usuario existe
+    const existingUser = await this.creatorRepository.findById(userId);
+    if (!existingUser) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    // Si se está actualizando el slug, verificar que no esté en uso
+    if (updateData.slug) {
+      const userWithSameSlug = await this.creatorRepository.findBySlug(updateData.slug);
+      if (userWithSameSlug && userWithSameSlug.id !== userId) {
+        throw new UnauthorizedException('El slug ya está en uso');
+      }
+    }
+
+    // Actualizar el perfil
+    return this.creatorRepository.updateProfile(userId, updateData);
   }
 }

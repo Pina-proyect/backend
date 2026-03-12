@@ -34,6 +34,10 @@ model Creator {
   verificationStatus String   @default("pending")
   selfiePath         String?
   photoPath          String?
+  // Slug único y opcional para el perfil público
+  slug               String?  @unique
+  // Biografía opcional con límite de 255 caracteres
+  bio                String?  @db.VarChar(255)
   createdAt          DateTime @default(now())
   // Marca de actualización automática
   updatedAt          DateTime @updatedAt

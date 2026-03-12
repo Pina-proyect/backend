@@ -9,10 +9,14 @@ export class CreatorRepository {
   // Sobrecarga: admite Prisma input tradicional y Partial<Creator> para OAuth
   async create(data: Prisma.CreatorCreateInput): Promise<Creator>;
   async create(data: Partial<Creator>): Promise<Creator>;
-  async create(data: Prisma.CreatorCreateInput | Partial<Creator>): Promise<Creator> {
+  async create(
+    data: Prisma.CreatorCreateInput | Partial<Creator>,
+  ): Promise<Creator> {
     // Si el caller pasó Prisma.CreatorCreateInput, lo usamos directo.
     if ('verificationStatus' in data && 'birthDate' in data) {
-      return this.prisma.creator.create({ data: data as Prisma.CreatorCreateInput });
+      return this.prisma.creator.create({
+        data: data as Prisma.CreatorCreateInput,
+      });
     }
 
     // Caso Partial<Creator>: mapeamos a los campos aceptados por Prisma
@@ -44,6 +48,17 @@ export class CreatorRepository {
     return this.prisma.creator.findUnique({ where: { id } });
   }
 
+  async findBySlug(slug: string): Promise<Creator | null> {
+    return this.prisma.creator.findUnique({ where: { slug } });
+  }
+
+  async update(id: string, data: Partial<Creator>): Promise<Creator> {
+    return this.prisma.creator.update({
+      where: { id },
+      data,
+    });
+  }
+
   async updateVerification(id: string, data: Partial<Creator>) {
     return this.prisma.creator.update({ where: { id }, data });
   }
@@ -62,7 +77,10 @@ export class CreatorRepository {
   /**
    * Busca un creador por su proveedor y el ID de ese proveedor
    */
-  async findByProvider(provider: string, providerId: string): Promise<Creator | null> {
+  async findByProvider(
+    provider: string,
+    providerId: string,
+  ): Promise<Creator | null> {
     // Usa la clave compuesta generada por @@unique([provider, providerId])
     return this.prisma.creator.findUnique({
       where: {

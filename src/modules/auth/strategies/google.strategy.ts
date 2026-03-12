@@ -33,7 +33,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     profile: Profile,
     done: VerifyCallback,
   ): Promise<any> {
-    const { id, name, emails } = profile;
+    const { id, name, emails, photos } = profile;
 
     if (!emails || !emails[0]) {
       return done(new Error('No se pudo obtener el email de Google'), false);
@@ -44,10 +44,12 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       providerId: id,
       email: emails[0].value,
       fullName: `${name?.givenName ?? ''} ${name?.familyName ?? ''}`.trim(),
+      photoPath: photos && photos[0] ? photos[0].value : null,
     };
 
     try {
-      const user = await this.authService.validateOrCreateProviderUser(userData);
+      const user =
+        await this.authService.validateOrCreateProviderUser(userData);
       // adjunta el usuario a req.user
       done(null, user);
     } catch (err) {
