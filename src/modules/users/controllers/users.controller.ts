@@ -14,10 +14,11 @@ import { UsersService } from '../services/users.service';
 import { UpdateProfileDto } from '../../auth/dto/update-profile.dto';
 
 @Controller('users')
-@UseGuards(AuthGuard('jwt'))
+
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('profile')
   @HttpCode(HttpStatus.OK)
   async getProfile(@Req() req: any) {
@@ -59,7 +60,8 @@ export class UsersController {
       updatedAt: creator.updatedAt,
     };
   }
-
+  
+  @UseGuards(AuthGuard('jwt'))
   @Patch('profile')
   @HttpCode(HttpStatus.OK)
   async updateProfile(

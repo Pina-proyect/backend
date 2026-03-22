@@ -52,7 +52,7 @@ export class CreatorRepository {
     return this.prisma.creator.findUnique({ where: { slug } });
   }
 
-  async update(id: string, data: Partial<Creator>): Promise<Creator> {
+  async update(id: string, data: Prisma.CreatorUpdateInput): Promise<Creator> {
     return this.prisma.creator.update({
       where: { id },
       data,

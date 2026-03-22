@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
-import type { Creator } from '@prisma/client';
+import { Creator } from '@prisma/client';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { CreatorRepository } from '../repositories/creator.repository';
@@ -180,6 +180,9 @@ export class AuthService {
     }
 
     // Actualizar el perfil
-    return this.creatorRepository.updateProfile(userId, updateData);
+    return this.creatorRepository.update(userId, {
+      slug: updateData.slug,
+      bio: updateData.bio,
+    });
   }
 }
