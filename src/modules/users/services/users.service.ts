@@ -51,4 +51,22 @@ export class UsersService {
     
     return creator;
   }
+
+  /**
+   * Busca creadores por nombre o slug
+   */
+  async searchCreators(query: string) {
+    if (!query || query.trim().length === 0) {
+      return [];
+    }
+    const creators = await this.creatorRepository.search(query.trim());
+    // Filtramos datos sensibles
+    return creators.map(c => ({
+      id: c.id,
+      fullName: c.fullName,
+      slug: c.slug,
+      photoPath: c.photoPath,
+      niche: c.niche,
+    }));
+  }
 }

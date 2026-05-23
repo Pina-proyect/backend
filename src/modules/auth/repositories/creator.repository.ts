@@ -32,6 +32,7 @@ export class CreatorRepository {
       provider: (data as Partial<Creator>).provider ?? 'credentials',
       providerId: (data as Partial<Creator>).providerId ?? null,
       nationalId: (data as Partial<Creator>).nationalId ?? null,
+      role: (data as Partial<Creator>).role ?? 'CREATOR',
     };
     return this.prisma.creator.create({ data: mapped });
   }
@@ -89,6 +90,21 @@ export class CreatorRepository {
           providerId,
         },
       },
+    });
+  }
+
+  /**
+   * Busca creadores por término (nombre o slug)
+   */
+  async search(query: string): Promise<Creator[]> {
+    return this.prisma.creator.findMany({
+      where: {
+        OR: [
+          { fullName: { contains: query, mode: 'insensitive' } },
+          { slug: { contains: query, mode: 'insensitive' } },
+        ],
+      },
+      take: 20, // Límite para no saturar
     });
   }
 }

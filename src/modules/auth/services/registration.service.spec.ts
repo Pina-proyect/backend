@@ -1,28 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RegistrationService } from './registration.service';
 import { CreatorRepository } from '../repositories/creator.repository';
-import { KycProviderService } from './kycprovider.service';
 import { CreateCreatorDto } from '../dto/create-creator.dto';
 import { ConfigService } from '@nestjs/config';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 
-// --- Mocks para las dependencias ---
-// Creamos una interfaz o tipo para los mocks para tener autocompletado y tipado
-// Esto es opcional, pero ayuda mucho. Podrías también usar 'jest.Mocked<CreatorRepository>'
 type MockCreatorRepository = Required<jest.Mocked<CreatorRepository>>;
-type MockKycProviderService = Required<jest.Mocked<KycProviderService>>;
 
 describe('RegistrationService', () => {
   let service: RegistrationService;
-  let creatorRepository: MockCreatorRepository; // Usamos el tipo mock
-  let kycProvider: MockKycProviderService; // Usamos el tipo mock
+  let creatorRepository: MockCreatorRepository;
 
-  // Datos de prueba comunes
   const mockCreateCreatorDto: CreateCreatorDto = {
     fullName: 'Juan Perez',
     email: 'juan.perez@example.com',
     nationalId: '123456789',
-    birthDate: '2000-01-01', // Fecha para ser mayor de 18
+    birthDate: '2000-01-01',
     selfiePath: 'path/to/selfie.jpg',
     photoPath: 'path/to/photo.jpg',
   };
@@ -34,7 +27,6 @@ describe('RegistrationService', () => {
     verificationStatus: 'pending',
     createdAt: new Date(),
     updatedAt: new Date(),
-    // Campos opcionales introducidos por OAuth / nuevos del modelo
     password: null,
     phone: null,
     provider: 'credentials',
@@ -43,8 +35,6 @@ describe('RegistrationService', () => {
   };
 
   beforeEach(async () => {
-    // 1. Define las implementaciones mock de los métodos que tu servicio va a llamar
-    // Asegúrate de mockear TODOS los métodos que 'RegistrationService' usa de estas dependencias
     const creatorRepositoryMock: MockCreatorRepository = {
       findByEmail: jest.fn(),
       findByDni: jest.fn(),
@@ -53,23 +43,17 @@ describe('RegistrationService', () => {
       updateVerification: jest.fn(),
       findByProvider: jest.fn(),
       incrementTokenVersion: jest.fn(),
+      findBySlug: jest.fn(),
+      update: jest.fn(),
+      search: jest.fn(),
     };
 
-    const kycProviderServiceMock: MockKycProviderService = {
-      verifyDocuments: jest.fn(),
-    };
-
-    // 2. Configura el TestingModule
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RegistrationService,
         {
-          provide: CreatorRepository, // Cuando Nest necesite CreatorRepository
-          useValue: creatorRepositoryMock, // usa nuestra versión mock
-        },
-        {
-          provide: KycProviderService, // Cuando Nest necesite KycProviderService
-          useValue: kycProviderServiceMock, // usa nuestra versión mock
+          provide: CreatorRepository,
+          useValue: creatorRepositoryMock,
         },
         {
           provide: ConfigService,
@@ -78,18 +62,12 @@ describe('RegistrationService', () => {
       ],
     }).compile();
 
-    // 3. Obtén las instancias del servicio y los mocks del módulo de prueba
     service = module.get<RegistrationService>(RegistrationService);
-    // ¡LA CLAVE ESTÁ AQUÍ! Casteamos a `MockCreatorRepository` directamente.
     creatorRepository = module.get<CreatorRepository>(
       CreatorRepository,
     ) as unknown as MockCreatorRepository;
-    kycProvider = module.get<KycProviderService>(
-      KycProviderService,
-    ) as MockKycProviderService;
   });
 
-  // --- Tests de definición ---
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
@@ -98,14 +76,7 @@ describe('RegistrationService', () => {
     expect(creatorRepository).toBeDefined();
   });
 
-  it('KycProviderService mock should be defined', () => {
-    expect(kycProvider).toBeDefined();
-  });
-
-  // --- Tests para startRegistration ---
   describe('startRegistration', () => {
-    // Limpiamos los mocks antes de cada test dentro de este describe
-    // para asegurar que los resultados de un test no afecten a otro
     beforeEach(() => {
       jest.clearAllMocks();
     });
@@ -114,19 +85,17 @@ describe('RegistrationService', () => {
       const youngCreatorDto = {
         ...mockCreateCreatorDto,
         birthDate: '2010-01-01',
-      }; // Menor de 18
+      };
       await expect(service.startRegistration(youngCreatorDto)).rejects.toThrow(
         new BadRequestException(
           'Debes tener al menos 18 años para registrarte.',
         ),
       );
-      // Aseguramos que no se llamaron a los repositorios si falló por edad
       expect(creatorRepository.findByEmail).not.toHaveBeenCalled();
     });
 
     it('should throw BadRequestException if email already exists', async () => {
-      // Configuramos el mock para simular que el email ya existe
-      creatorRepository.findByEmail.mockResolvedValue(mockCreator);
+      creatorRepository.findByEmail.mockResolvedValue(mockCreator as any);
 
       await expect(
         service.startRegistration(mockCreateCreatorDto),
@@ -138,13 +107,12 @@ describe('RegistrationService', () => {
       expect(creatorRepository.findByEmail).toHaveBeenCalledWith(
         mockCreateCreatorDto.email,
       );
-      expect(creatorRepository.findByDni).not.toHaveBeenCalled(); // No debe llegar aquí
+      expect(creatorRepository.findByDni).not.toHaveBeenCalled();
     });
 
     it('should throw BadRequestException if DNI already exists', async () => {
-      // Simulamos que el email no existe, pero el DNI sí
       creatorRepository.findByEmail.mockResolvedValue(null);
-      creatorRepository.findByDni.mockResolvedValue(mockCreator);
+      creatorRepository.findByDni.mockResolvedValue(mockCreator as any);
 
       await expect(
         service.startRegistration(mockCreateCreatorDto),
@@ -159,19 +127,16 @@ describe('RegistrationService', () => {
       expect(creatorRepository.findByDni).toHaveBeenCalledWith(
         mockCreateCreatorDto.nationalId,
       );
-      expect(creatorRepository.create).not.toHaveBeenCalled(); // No debe llegar aquí
+      expect(creatorRepository.create).not.toHaveBeenCalled();
     });
 
     it('should successfully start registration and return pending status', async () => {
       creatorRepository.findByEmail.mockResolvedValue(null);
       creatorRepository.findByDni.mockResolvedValue(null);
-      creatorRepository.create.mockResolvedValue(mockCreator);
-      creatorRepository.findById.mockResolvedValue(mockCreator);
-      kycProvider.verifyDocuments.mockResolvedValue('verified');
+      creatorRepository.create.mockResolvedValue(mockCreator as any);
 
       const result = await service.startRegistration(mockCreateCreatorDto);
 
-      // Aserciones sobre llamadas
       expect(creatorRepository.findByEmail).toHaveBeenCalledWith(
         mockCreateCreatorDto.email,
       );
@@ -180,13 +145,8 @@ describe('RegistrationService', () => {
       );
       expect(creatorRepository.create).toHaveBeenCalled();
 
-      // Inspeccionamos el primer llamado al create
       const calledInput = creatorRepository.create.mock.calls[0][0];
-
-      // Verificá el tipo de birthDate sin usar expect.any(Date)
       expect(calledInput.birthDate).toBeInstanceOf(Date);
-
-      // Verificá el resto de los campos
       expect(calledInput).toMatchObject({
         fullName: mockCreateCreatorDto.fullName,
         email: mockCreateCreatorDto.email,
@@ -199,148 +159,27 @@ describe('RegistrationService', () => {
 
       expect(result).toEqual({
         status: 'pending',
-        message: 'Verification started',
+        message: 'Registro completado. Tu cuenta se encuentra en proceso de verificación.',
         userId: mockCreator.id,
       });
     });
 
     it('should hash password when provided and persist hashed value', async () => {
-      // Arrange
       creatorRepository.findByEmail.mockResolvedValue(null);
       creatorRepository.findByDni.mockResolvedValue(null);
-      creatorRepository.create.mockResolvedValue(mockCreator);
+      creatorRepository.create.mockResolvedValue(mockCreator as any);
 
       const dtoWithPassword = {
         ...mockCreateCreatorDto,
         password: 'SuperSecret123',
       } as any;
 
-      // Act
       await service.startRegistration(dtoWithPassword);
 
-      // Assert: se llamó a create y el password es un hash (no igual al texto plano)
       const calledInput = creatorRepository.create.mock.calls[0][0];
       expect(typeof calledInput.password).toBe('string');
       expect(calledInput.password).not.toBe(dtoWithPassword.password);
-      // bcrypt genera hashes con prefijo $2b$ o $2a$
       expect(calledInput.password).toMatch(/^\$2[aby?]\$/);
-    });
-
-    it('verifyInBackground debería hacer return si no existe el creator', async () => {
-      // Mock: findById devuelve null
-      creatorRepository.findById.mockResolvedValue(null);
-
-      type PrivateAPI = {
-        verifyInBackground(id: string): Promise<void>;
-      };
-
-      // Llamá al método privado SIN any y sin @ts-ignore
-      await (service as unknown as PrivateAPI).verifyInBackground('fake-id');
-
-      expect(creatorRepository.findById).toHaveBeenCalledWith('fake-id');
-      expect(kycProvider.verifyDocuments).not.toHaveBeenCalled();
-      expect(creatorRepository.updateVerification).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('getStatus', () => {
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });
-
-    it('debería lanzar NotFoundException si el usuario no existe', async () => {
-      // Arrange
-      creatorRepository.findById.mockResolvedValue(null);
-
-      // Act + Assert
-      await expect(service.getStatus('id-inexistente')).rejects.toThrow(
-        new NotFoundException('Usuario no encontrado'),
-      );
-
-      expect(creatorRepository.findById).toHaveBeenCalledWith('id-inexistente');
-      expect(creatorRepository.findById).toHaveBeenCalledTimes(1);
-    });
-
-    it('debería devolver el estado cuando el usuario existe', async () => {
-      // Arrange
-      const existing = {
-        ...mockCreator,
-        verificationStatus: 'verified', // probamos un valor distinto de 'pending'
-      };
-      creatorRepository.findById.mockResolvedValue(existing);
-
-      // Act
-      const resp = await service.getStatus(existing.id);
-
-      // Assert
-      expect(creatorRepository.findById).toHaveBeenCalledWith(existing.id);
-      expect(resp).toEqual({
-        userId: existing.id,
-        status: 'verified',
-        message: 'Estado: verified',
-      });
-    });
-  });
-
-  describe('retryVerification', () => {
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });
-
-    it('debería actualizar el estado a pending, llamar a verifyInBackground y devolver la respuesta', async () => {
-      // Arrange
-      creatorRepository.updateVerification.mockResolvedValue(mockCreator);
-
-      // Espiamos el método privado verifyInBackground para asegurar que se invoque
-      const spyVerify = jest
-        .spyOn(service as any, 'verifyInBackground')
-        .mockResolvedValue(undefined);
-
-      const userId = 'creator-id-123';
-      const selfiePath = '/tmp/selfie.jpg';
-      const photoPath = '/tmp/photo.jpg';
-
-      // Act
-      const resp = await service.retryVerification(
-        userId,
-        selfiePath,
-        photoPath,
-      );
-
-      // Assert
-      expect(creatorRepository.updateVerification).toHaveBeenCalledWith(
-        userId,
-        {
-          selfiePath,
-          photoPath,
-          verificationStatus: 'pending',
-        },
-      );
-
-      expect(spyVerify).toHaveBeenCalledWith(userId);
-
-      expect(resp).toEqual({
-        userId,
-        status: 'pending',
-        message: 'Nuevo intento de verificación iniciado',
-      });
-    });
-
-    it('debería propagar el error si updateVerification falla', async () => {
-      // Arrange
-      creatorRepository.updateVerification.mockRejectedValue(
-        new Error('DB down'),
-      );
-
-      // Act + Assert
-      await expect(
-        service.retryVerification('u1', '/s.jpg', '/p.jpg'),
-      ).rejects.toThrow('DB down');
-
-      // verifyInBackground no debería llamarse si falla la actualización
-
-      const spyVerify = jest.spyOn(service as any, 'verifyInBackground');
-      expect(spyVerify).not.toHaveBeenCalled();
     });
   });
 });

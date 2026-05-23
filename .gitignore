@@ -52,10 +52,9 @@ pids
 *.seed
 *.pid.lock
 
-# Diagnostic reports (https://nodejs.org/api/report.html)
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
->>>>>>> 05bd0c1 (initial commit of full repository)
-
 # Prisma
 prisma/dev.db
 /generated/prisma
+
+# Uploads locales
+/uploads

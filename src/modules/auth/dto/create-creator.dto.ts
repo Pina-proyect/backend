@@ -14,17 +14,20 @@ export class CreateCreatorDto {
   @IsEmail()
   email: string;
 
-  @IsNotEmpty()
-  nationalId: string;
+  @IsOptional()
+  @IsString()
+  nationalId?: string;
 
   @IsDateString()
   birthDate: string; // validación básica
 
-  @IsNotEmpty()
-  photoPath: string; // será una URL a S3
+  @IsOptional()
+  @IsString()
+  photoPath?: string; // será una URL a S3
 
-  @IsNotEmpty()
-  selfiePath: string; // será una URL a S3
+  @IsOptional()
+  @IsString()
+  selfiePath?: string; // será una URL a S3
 
   // Contraseña opcional para registro convencional.
   // Si está presente, se hasheará en el servicio antes de persistir.
@@ -32,4 +35,8 @@ export class CreateCreatorDto {
   @IsString()
   @MinLength(8)
   password?: string;
+
+  @IsOptional()
+  @IsString()
+  role?: string;
 }

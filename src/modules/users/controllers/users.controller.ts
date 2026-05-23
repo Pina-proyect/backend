@@ -8,10 +8,12 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from '../services/users.service';
 import { UpdateProfileDto } from '../../auth/dto/update-profile.dto';
+import type { Creator } from '@prisma/client';
 
 @Controller('users')
 
@@ -37,7 +39,17 @@ export class UsersController {
       provider: creator.provider,
       createdAt: creator.createdAt,
       updatedAt: creator.updatedAt,
+      mpAccessToken: creator.mpAccessToken,
+      pinaPrice: creator.pinaPrice,
+      donationGoalTitle: creator.donationGoalTitle,
+      donationGoalAmount: creator.donationGoalAmount,
     };
+  }
+
+  @Get('search')
+  @HttpCode(HttpStatus.OK)
+  async searchCreators(@Query('q') q: string) {
+    return this.usersService.searchCreators(q);
   }
 
   @Get('profile/:slug')
@@ -55,9 +67,17 @@ export class UsersController {
       email: creator.email,
       slug: creator.slug,
       bio: creator.bio,
+      photoPath: creator.photoPath,
+      niche: creator.niche,
+      instagram: creator.instagram,
+      tiktok: creator.tiktok,
+      youtube: creator.youtube,
       provider: creator.provider,
       createdAt: creator.createdAt,
       updatedAt: creator.updatedAt,
+      pinaPrice: creator.pinaPrice,
+      donationGoalTitle: creator.donationGoalTitle,
+      donationGoalAmount: creator.donationGoalAmount,
     };
   }
   
@@ -83,6 +103,10 @@ export class UsersController {
       provider: updatedCreator.provider,
       createdAt: updatedCreator.createdAt,
       updatedAt: updatedCreator.updatedAt,
+      mpAccessToken: updatedCreator.mpAccessToken,
+      pinaPrice: updatedCreator.pinaPrice,
+      donationGoalTitle: updatedCreator.donationGoalTitle,
+      donationGoalAmount: updatedCreator.donationGoalAmount,
     };
   }
 }

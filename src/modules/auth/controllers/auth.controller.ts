@@ -59,6 +59,17 @@ export class AuthController {
     };
   }
 
+  /**
+   * Retorna el perfil del usuario actualmente autenticado.
+   * Requiere el token JWT en el header Authorization.
+   */
+  @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+  async getMe(@Req() req: Request): Promise<Creator> {
+    // req.user es inyectado por el JwtStrategy
+    return req.user as Creator;
+  }
+
   // --- ENDPOINTS DE GOOGLE OAUTH ---
 
   /**

@@ -24,4 +24,31 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   phone?: string;
+
+  @IsOptional()
+  @IsString()
+  niche?: string;
+
+  @IsOptional()
+  instagram?: boolean;
+
+  @IsOptional()
+  tiktok?: boolean;
+
+  @IsOptional()
+  youtube?: boolean;
+
+  @IsOptional()
+  @IsString()
+  mpAccessToken?: string;
+
+  @IsOptional()
+  pinaPrice?: number;
+
+  @IsOptional()
+  @IsString()
+  donationGoalTitle?: string;
+
+  @IsOptional()
+  donationGoalAmount?: number;
 }
