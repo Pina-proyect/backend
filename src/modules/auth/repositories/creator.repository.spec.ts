@@ -35,6 +35,7 @@ describe('CreatorRepository', () => {
     slug: 'juan-perez',
     bio: 'Creador de contenido apasionado',
     niche: null,
+    gender: 'creadora',
     instagram: false,
     tiktok: false,
     youtube: false,
