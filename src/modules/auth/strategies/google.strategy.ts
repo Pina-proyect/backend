@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, VerifyCallback, Profile } from 'passport-google-oauth20';
 import { AuthService } from '../services/auth.service';
+import { ConfigService } from '@nestjs/config';
 
 /**
  * GoogleStrategy
@@ -10,16 +11,24 @@ import { AuthService } from '../services/auth.service';
  */
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
-  constructor(private readonly authService: AuthService) {
+  private readonly logger = new Logger(GoogleStrategy.name);
+
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {
+    const clientID = configService.get<string>('GOOGLE_CLIENT_ID') || 'DUMMY_GOOGLE_CLIENT_ID';
+    const clientSecret = configService.get<string>('GOOGLE_CLIENT_SECRET') || 'DUMMY_GOOGLE_CLIENT_SECRET';
+    const callbackURL = configService.get<string>('GOOGLE_CALLBACK_URL') || 'http://localhost/dummy-callback';
+
     super({
-      // Valores por defecto para entorno de test/CI, evitan fallos de instanciación
-      clientID: process.env.GOOGLE_CLIENT_ID || 'DUMMY_GOOGLE_CLIENT_ID',
-      clientSecret:
-        process.env.GOOGLE_CLIENT_SECRET || 'DUMMY_GOOGLE_CLIENT_SECRET',
-      callbackURL:
-        process.env.GOOGLE_CALLBACK_URL || 'http://localhost/dummy-callback',
+      clientID,
+      clientSecret,
+      callbackURL,
       scope: ['email', 'profile'],
     });
+
+    this.logger.log('GoogleStrategy successfully initialized.');
   }
 
   /**

@@ -200,4 +200,79 @@ export class PaymentsService {
     }
     return { received: true };
   }
+
+  /**
+   * Genera la URL de autorización OAuth de Mercado Pago
+   */
+  getMercadoPagoAuthUrl(creatorId: string): string {
+    const clientId = process.env.MP_CLIENT_ID || '';
+    const redirectUri = encodeURIComponent(process.env.MP_REDIRECT_URI || '');
+    return `https://auth.mercadopago.com/authorization?client_id=${clientId}&response_type=code&platform_id=mp&state=${creatorId}&redirect_uri=${redirectUri}`;
+  }
+
+  /**
+   * Procesa el callback de OAuth de Mercado Pago
+   */
+  async handleMercadoPagoCallback(code: string, creatorId: string): Promise<string> {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const clientSecret = process.env.MP_CLIENT_SECRET || process.env.MP_ACCESS_TOKEN || '';
+    const clientId = process.env.MP_CLIENT_ID || '';
+    const redirectUri = process.env.MP_REDIRECT_URI || '';
+
+    try {
+      const body = new URLSearchParams({
+        client_secret: clientSecret,
+        client_id: clientId,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: redirectUri,
+      });
+
+      const response = await fetch('https://api.mercadopago.com/oauth/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+        },
+        body: body.toString(),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`MercadoPago OAuth token error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+
+      // Guardamos las credenciales en la base de datos para el creador
+      await this.prisma.creator.update({
+        where: { id: creatorId },
+        data: {
+          mpAccessToken: data.access_token,
+          mpRefreshToken: data.refresh_token,
+          mpPublicKey: data.public_key,
+        },
+      });
+
+      return `${frontendUrl}/settings?tab=monetization&connected=success`;
+    } catch (error: any) {
+      console.error('[MERCADOPAGO OAUTH ERROR]', error);
+      return `${frontendUrl}/settings?tab=monetization&connected=error&message=${encodeURIComponent(error.message)}`;
+    }
+  }
+
+  /**
+   * Desvincula la cuenta de Mercado Pago del creador
+   */
+  async disconnectMercadoPago(creatorId: string) {
+    await this.prisma.creator.update({
+      where: { id: creatorId },
+      data: {
+        mpAccessToken: null,
+        mpRefreshToken: null,
+        mpPublicKey: null,
+      },
+    });
+    return { success: true };
+  }
 }
