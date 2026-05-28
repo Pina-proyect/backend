@@ -42,6 +42,8 @@ model Creator {
   bio                String?  @db.VarChar(255)
   // Nicho creativo seleccionado (fotografía, cine, etc.)
   niche              String?
+  // Género o título de denominación del perfil ('creador' o 'creadora')
+  gender             String   @default("creadora")
   // Redes sociales (booleanos o handles, por ahora booleanos para el MVP)
   instagram          Boolean  @default(false)
   tiktok             Boolean  @default(false)

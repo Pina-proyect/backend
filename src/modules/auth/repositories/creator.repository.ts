@@ -94,16 +94,26 @@ export class CreatorRepository {
   }
 
   /**
-   * Busca creadores por término (nombre o slug)
+   * Busca creadores por término (nombre o slug) y opcionalmente por nicho
    */
-  async search(query: string): Promise<Creator[]> {
+  async search(query?: string, niche?: string): Promise<Creator[]> {
+    const where: Prisma.CreatorWhereInput = {
+      role: 'CREATOR',
+    };
+
+    if (query && query.trim().length > 0) {
+      where.OR = [
+        { fullName: { contains: query.trim(), mode: 'insensitive' } },
+        { slug: { contains: query.trim(), mode: 'insensitive' } },
+      ];
+    }
+
+    if (niche && niche.trim().length > 0 && niche !== 'all') {
+      where.niche = niche;
+    }
+
     return this.prisma.creator.findMany({
-      where: {
-        OR: [
-          { fullName: { contains: query, mode: 'insensitive' } },
-          { slug: { contains: query, mode: 'insensitive' } },
-        ],
-      },
+      where,
       take: 20, // Límite para no saturar
     });
   }

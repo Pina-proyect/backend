@@ -51,4 +51,8 @@ export class UpdateProfileDto {
 
   @IsOptional()
   donationGoalAmount?: number;
+
+  @IsOptional()
+  @IsString()
+  gender?: string;
 }

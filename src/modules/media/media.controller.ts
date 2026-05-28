@@ -25,11 +25,6 @@ export class MediaController {
     @Body('title') title: string,
     @Req() req: any,
   ) {
-    if (req.user.verificationStatus !== 'verified') {
-      throw new ForbiddenException(
-        'Debes verificar tu identidad antes de subir archivos multimedia.',
-      );
-    }
     return this.mediaService.saveMedia(req.user.id, file, title);
   }
 
