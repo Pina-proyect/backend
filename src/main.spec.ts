@@ -43,6 +43,6 @@ describe('main.ts Bootstrap', () => {
 
   it('should set global prefix', async () => {
     await bootstrap();
-    expect(mockApp.setGlobalPrefix).toHaveBeenCalledWith('pina');
+    expect(mockApp.setGlobalPrefix).toHaveBeenCalledWith('api/pina');
   });
 });

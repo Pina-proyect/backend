@@ -17,7 +17,7 @@ export async function bootstrap() {
     }),
   );
 
-  app.setGlobalPrefix('pina');
+  app.setGlobalPrefix('api/pina');
 
   await app.listen(process.env.PORT ?? 4000);
 }

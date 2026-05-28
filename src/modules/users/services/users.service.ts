@@ -53,13 +53,10 @@ export class UsersService {
   }
 
   /**
-   * Busca creadores por nombre o slug
+   * Busca creadores por nombre o slug y opcionalmente por nicho
    */
-  async searchCreators(query: string) {
-    if (!query || query.trim().length === 0) {
-      return [];
-    }
-    const creators = await this.creatorRepository.search(query.trim());
+  async searchCreators(query?: string, niche?: string) {
+    const creators = await this.creatorRepository.search(query, niche);
     // Filtramos datos sensibles
     return creators.map(c => ({
       id: c.id,
@@ -67,6 +64,8 @@ export class UsersService {
       slug: c.slug,
       photoPath: c.photoPath,
       niche: c.niche,
+      bio: c.bio,
+      gender: c.gender,
     }));
   }
 }

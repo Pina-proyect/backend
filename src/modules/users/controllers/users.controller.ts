@@ -40,16 +40,21 @@ export class UsersController {
       createdAt: creator.createdAt,
       updatedAt: creator.updatedAt,
       mpAccessToken: creator.mpAccessToken,
+      mpPublicKey: creator.mpPublicKey,
       pinaPrice: creator.pinaPrice,
       donationGoalTitle: creator.donationGoalTitle,
       donationGoalAmount: creator.donationGoalAmount,
+      gender: creator.gender,
     };
   }
 
   @Get('search')
   @HttpCode(HttpStatus.OK)
-  async searchCreators(@Query('q') q: string) {
-    return this.usersService.searchCreators(q);
+  async searchCreators(
+    @Query('q') q?: string,
+    @Query('niche') niche?: string
+  ) {
+    return this.usersService.searchCreators(q, niche);
   }
 
   @Get('profile/:slug')
@@ -78,6 +83,7 @@ export class UsersController {
       pinaPrice: creator.pinaPrice,
       donationGoalTitle: creator.donationGoalTitle,
       donationGoalAmount: creator.donationGoalAmount,
+      gender: creator.gender,
     };
   }
   
@@ -104,9 +110,11 @@ export class UsersController {
       createdAt: updatedCreator.createdAt,
       updatedAt: updatedCreator.updatedAt,
       mpAccessToken: updatedCreator.mpAccessToken,
+      mpPublicKey: updatedCreator.mpPublicKey,
       pinaPrice: updatedCreator.pinaPrice,
       donationGoalTitle: updatedCreator.donationGoalTitle,
       donationGoalAmount: updatedCreator.donationGoalAmount,
+      gender: updatedCreator.gender,
     };
   }
 }
