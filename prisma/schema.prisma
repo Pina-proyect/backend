@@ -41,6 +41,8 @@ model Creator {
   slug               String?  @unique
   // Biografía opcional con límite de 255 caracteres
   bio                String?  @db.VarChar(255)
+  // Ubicación o país
+  country            String?
   // Nicho creativo seleccionado (fotografía, cine, etc.)
   niche              String?
   // Género o título de denominación del perfil ('creador' o 'creadora')
