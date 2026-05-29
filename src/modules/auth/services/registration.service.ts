@@ -61,7 +61,7 @@ export class RegistrationService {
       email: data.email,
       nationalId: data.nationalId,
       birthDate: new Date(data.birthDate),
-      verificationStatus: 'pending',
+      verificationStatus: data.role === 'CONSUMER' ? 'verified' : 'pending',
       selfiePath: data.selfiePath,
       photoPath: data.photoPath,
       password: hashedPassword,
@@ -69,8 +69,8 @@ export class RegistrationService {
     });
 
     return {
-      status: 'pending',
-      message: 'Registro completado. Tu cuenta se encuentra en proceso de verificación.',
+      status: 'success',
+      message: 'Registro completado con éxito.',
       userId: creator.id,
     };
   }
