@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './controllers/auth.controller';
+import { RegistrationController } from './controllers/registration.controller';
 import { RegistrationService } from './services/registration.service';
 import { CreatorRepository } from './repositories/creator.repository';
 import { PrismaService } from 'prisma/prisma.service';
@@ -17,7 +18,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       signOptions: { expiresIn: (process.env.JWT_EXPIRES_IN || '15m') as any },
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, RegistrationController],
   providers: [
     RegistrationService,
     CreatorRepository,
