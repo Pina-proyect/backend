@@ -24,7 +24,7 @@ export class UsersController {
   @Get('profile')
   @HttpCode(HttpStatus.OK)
   async getProfile(@Req() req: any) {
-    const userId = req.user.sub;
+    const userId = req.user.id;
     const creator = await this.usersService.getProfile(userId);
     
     return {
@@ -94,7 +94,7 @@ export class UsersController {
     @Req() req: any,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
-    const userId = req.user.sub;
+    const userId = req.user.id;
     const updatedCreator = await this.usersService.updateProfile(userId, updateProfileDto);
     
     return {
