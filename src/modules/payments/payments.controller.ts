@@ -1,4 +1,5 @@
 import { Controller, Post, Body, Req, UseGuards, Query, Get, Res, Headers, UnauthorizedException } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { PaymentsService } from './payments.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Response, Request } from 'express';
@@ -15,6 +16,7 @@ export class PaymentsController {
   }
 
   @Post('webhook')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async webhook(
     @Query('topic') topic: string,
     @Query('id') id: string,

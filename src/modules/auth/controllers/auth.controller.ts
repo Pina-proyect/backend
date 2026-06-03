@@ -10,6 +10,7 @@ import {
   Res,
   Patch,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
 import { Response, Request } from 'express';
 import type { CookieOptions } from 'express';
@@ -43,6 +44,7 @@ export class AuthController {
 
   // --- Endpoint de Login Convencional ---
   @Post('login')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() loginDto: LoginCreatorDto,
