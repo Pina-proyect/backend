@@ -1,4 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import * as crypto from 'crypto';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { PrismaService } from 'prisma/prisma.service';
 
@@ -6,11 +8,14 @@ import { PrismaService } from 'prisma/prisma.service';
 export class PaymentsService {
   private client: MercadoPagoConfig;
 
-  constructor(private prisma: PrismaService) {
-    // Inicializamos el cliente con el token del .env
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+  ) {
+    const mpToken = this.configService.get<string>('MP_ACCESS_TOKEN');
     this.client = new MercadoPagoConfig({
-      accessToken: process.env.MP_ACCESS_TOKEN || '',
-      options: { timeout: 5000 }
+      accessToken: mpToken || '',
+      options: { timeout: 5000 },
     });
   }
 
@@ -24,11 +29,9 @@ export class PaymentsService {
 
     const preference = new Preference(this.client);
 
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:4000';
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const backendUrl = this.configService.get('BACKEND_URL', 'http://localhost:4000');
+    const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
 
-    // El precio que paga el usuario es el del pack.
-    // Nosotros luego calcularemos la fee del 7% internamente o vía marketplace_fee.
     const body = {
       items: [
         {
@@ -46,7 +49,7 @@ export class PaymentsService {
         pending: `${frontendUrl}/payment-status?status=pending`
       },
       autoReturn: 'approved',
-      notificationUrl: `${process.env.NGROK_URL || backendUrl}/pina/payments/webhook`,
+      notificationUrl: `${this.configService.get('NGROK_URL', backendUrl)}/api/pina/payments/webhook`,
       // Lógica de marketplace_fee (opcional según si es cuenta Marketplace o no)
       // marketplace_fee: Number(pack.price) * 0.07 
     };
@@ -83,11 +86,10 @@ export class PaymentsService {
     });
     const preference = new Preference(creatorClient);
 
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:4000';
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const backendUrl = this.configService.get('BACKEND_URL', 'http://localhost:4000');
+    const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
 
     // Fee del 7% para Pina (Marketplace Fee)
-    // El marketplace_fee se cobra al creador, nosotros lo retenemos.
     const fee = amount * 0.07;
 
     const body = {
@@ -107,7 +109,7 @@ export class PaymentsService {
         pending: `${frontendUrl}/payment-status?status=pending`
       },
       autoReturn: 'approved',
-      notificationUrl: `${process.env.NGROK_URL || backendUrl}/pina/payments/webhook?creatorId=${creatorId}`,
+      notificationUrl: `${this.configService.get('NGROK_URL', backendUrl)}/api/pina/payments/webhook?creatorId=${creatorId}`,
       marketplaceFee: Number(fee.toFixed(2))
     };
 
@@ -123,11 +125,30 @@ export class PaymentsService {
     }
   }
 
+  validateWebhookSignature(xSignature: string, xRequestId: string): boolean {
+    const secret = this.configService.get<string>('MP_WEBHOOK_SECRET');
+    if (!secret) return true; // si no hay secret configurado, no validamos
+
+    const parts = xSignature.split(',');
+    let ts = '';
+    let v1 = '';
+    for (const part of parts) {
+      const [key, value] = part.trim().split('=');
+      if (key === 'ts') ts = value;
+      if (key === 'v1') v1 = value;
+    }
+    if (!ts || !v1) return false;
+
+    const template = `x-request-id:${xRequestId};ts:${ts};`;
+    const computed = crypto.createHmac('sha256', secret).update(template).digest('hex');
+    return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(v1));
+  }
+
   async handleWebhook(topic: string, id: string, creatorId?: string) {
     if (topic === 'payment') {
        try {
          // Determine which access token to use
-         let accessToken = process.env.MP_ACCESS_TOKEN;
+          let accessToken = this.configService.get<string>('MP_ACCESS_TOKEN', '');
          
          if (creatorId) {
            const creator = await this.prisma.creator.findUnique({ where: { id: creatorId } });
@@ -205,8 +226,8 @@ export class PaymentsService {
    * Genera la URL de autorización OAuth de Mercado Pago
    */
   getMercadoPagoAuthUrl(creatorId: string): string {
-    const clientId = process.env.MP_CLIENT_ID || '';
-    const redirectUri = encodeURIComponent(process.env.MP_REDIRECT_URI || '');
+    const clientId = this.configService.get('MP_CLIENT_ID', '');
+    const redirectUri = encodeURIComponent(this.configService.get('MP_REDIRECT_URI', ''));
     return `https://auth.mercadopago.com/authorization?client_id=${clientId}&response_type=code&platform_id=mp&state=${creatorId}&redirect_uri=${redirectUri}`;
   }
 
@@ -214,10 +235,10 @@ export class PaymentsService {
    * Procesa el callback de OAuth de Mercado Pago
    */
   async handleMercadoPagoCallback(code: string, creatorId: string): Promise<string> {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const clientSecret = process.env.MP_CLIENT_SECRET || process.env.MP_ACCESS_TOKEN || '';
-    const clientId = process.env.MP_CLIENT_ID || '';
-    const redirectUri = process.env.MP_REDIRECT_URI || '';
+    const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
+    const clientSecret = this.configService.get('MP_CLIENT_SECRET', this.configService.get('MP_ACCESS_TOKEN', ''));
+    const clientId = this.configService.get('MP_CLIENT_ID', '');
+    const redirectUri = this.configService.get('MP_REDIRECT_URI', '');
 
     try {
       const body = new URLSearchParams({
@@ -232,7 +253,7 @@ export class PaymentsService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+          'Authorization': `Bearer ${this.configService.get('MP_ACCESS_TOKEN', '')}`,
         },
         body: body.toString(),
       });

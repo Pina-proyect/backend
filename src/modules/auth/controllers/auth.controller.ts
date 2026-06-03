@@ -97,7 +97,7 @@ export class AuthController {
     // Seteamos refresh token en cookie HttpOnly
     res.cookie(this.REFRESH_COOKIE, tokens.refreshToken, this.cookieOptions());
     // Redirigimos al frontend con el access token únicamente
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    const frontendUrl = process.env.FRONTEND_URL!;
     res.redirect(
       `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
     );

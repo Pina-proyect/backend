@@ -17,9 +17,9 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
   ) {
-    const clientID = configService.get<string>('GOOGLE_CLIENT_ID') || 'DUMMY_GOOGLE_CLIENT_ID';
-    const clientSecret = configService.get<string>('GOOGLE_CLIENT_SECRET') || 'DUMMY_GOOGLE_CLIENT_SECRET';
-    const callbackURL = configService.get<string>('GOOGLE_CALLBACK_URL') || 'http://localhost/dummy-callback';
+    const clientID = configService.getOrThrow<string>('GOOGLE_CLIENT_ID');
+    const clientSecret = configService.getOrThrow<string>('GOOGLE_CLIENT_SECRET');
+    const callbackURL = configService.getOrThrow<string>('GOOGLE_CALLBACK_URL');
 
     super({
       clientID,
