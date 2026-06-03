@@ -13,6 +13,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { PacksService } from './packs.service';
 import { PackAccessGuard } from './guards/pack-access.guard';
+import { CreatePackDto } from './dto/create-pack.dto';
 
 @Controller('packs')
 export class PacksController {
@@ -23,14 +24,7 @@ export class PacksController {
   @HttpCode(HttpStatus.CREATED)
   async createPack(
     @Req() req: any,
-    @Body()
-    data: {
-      title: string;
-      description?: string;
-      price: number;
-      categoryId: string;
-      mediaIds: string[];
-    },
+    @Body() data: CreatePackDto,
   ) {
     if (req.user.verificationStatus !== 'verified') {
       throw new ForbiddenException(

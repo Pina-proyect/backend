@@ -3,6 +3,7 @@ import { Throttle } from '@nestjs/throttler';
 import { PaymentsService } from './payments.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Response, Request } from 'express';
+import { WebhookPayloadDto } from './dto/webhook-payload.dto';
 
 @Controller('payments')
 export class PaymentsController {
@@ -21,7 +22,7 @@ export class PaymentsController {
     @Query('topic') topic: string,
     @Query('id') id: string,
     @Query('creatorId') creatorId: string,
-    @Body() body: any,
+    @Body() body: WebhookPayloadDto,
     @Headers('x-signature') xSignature: string,
     @Headers('x-request-id') xRequestId: string,
   ) {
@@ -29,8 +30,8 @@ export class PaymentsController {
       throw new UnauthorizedException('Invalid webhook signature');
     }
 
-    const finalId = id || body?.data?.id;
-    const finalTopic = topic || body?.type;
+    const finalId = id || body?.data?.id || '';
+    const finalTopic = topic || body?.type || '';
 
     return this.paymentsService.handleWebhook(finalTopic, finalId, creatorId);
   }

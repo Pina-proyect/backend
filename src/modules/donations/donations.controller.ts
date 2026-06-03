@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { PaymentsService } from '../payments/payments.service';
 import { PrismaService } from 'prisma/prisma.service';
+import { DonationPreferenceDto } from './dto/donation-preference.dto';
 
 @Controller('donations')
 export class DonationsController {
@@ -11,7 +12,7 @@ export class DonationsController {
 
   @Post('preference')
   async createDonationPreference(
-    @Body() body: { creatorId: string; quantity: number; message?: string; donorName?: string; donorId?: string }
+    @Body() body: DonationPreferenceDto,
   ) {
     const { creatorId, quantity, message, donorName, donorId } = body;
     
