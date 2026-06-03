@@ -41,6 +41,7 @@ import { DonationsModule } from './modules/donations/donations.module';
         MP_WEBHOOK_SECRET: Joi.string().optional().allow(''),
         NGROK_URL: Joi.string().optional().allow(''),
         BACKEND_URL: Joi.string().optional().allow(''),
+        CORS_ORIGINS: Joi.string().optional().allow(''),
         NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
       }),
     }),
