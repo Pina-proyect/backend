@@ -5,8 +5,10 @@ import {
 import { differenceInYears } from 'date-fns';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 import { CreateCreatorDto } from '../dto/create-creator.dto';
 import { CreatorRepository } from '../repositories/creator.repository';
+import { EmailService } from '../../email/email.service';
 
 export interface RegistrationResponse {
   userId: string;
@@ -19,6 +21,7 @@ export class RegistrationService {
   constructor(
     private readonly creatorRepository: CreatorRepository,
     private readonly config: ConfigService,
+    private readonly emailService: EmailService,
   ) {}
 
   async startRegistration(data: CreateCreatorDto): Promise<RegistrationResponse> {
@@ -68,9 +71,27 @@ export class RegistrationService {
       role: data.role,
     });
 
+    if (data.role !== 'CONSUMER') {
+      const verificationToken = randomBytes(32).toString('hex');
+      const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      await this.creatorRepository.update(creator.id, {
+        verificationToken,
+        verificationTokenExpires,
+      } as any);
+
+      await this.emailService.sendVerificationEmail(creator.email, verificationToken);
+    } else {
+      await this.creatorRepository.update(creator.id, {
+        emailVerified: true,
+      } as any);
+    }
+
     return {
       status: 'success',
-      message: 'Registro completado con éxito.',
+      message: data.role === 'CONSUMER'
+        ? 'Registro completado con éxito.'
+        : 'Registro completado. Revisa tu email para verificar tu cuenta.',
       userId: creator.id,
     };
   }

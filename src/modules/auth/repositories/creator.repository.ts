@@ -75,6 +75,18 @@ export class CreatorRepository {
     });
   }
 
+  async findByResetToken(token: string): Promise<Creator | null> {
+    return this.prisma.creator.findFirst({
+      where: { resetToken: token },
+    });
+  }
+
+  async findByVerificationToken(token: string): Promise<Creator | null> {
+    return this.prisma.creator.findFirst({
+      where: { verificationToken: token },
+    });
+  }
+
   /**
    * Busca un creador por su proveedor y el ID de ese proveedor
    */

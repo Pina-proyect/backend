@@ -15,6 +15,8 @@ import { MediaModule } from './modules/media/media.module';
 import { PacksModule } from './modules/packs/packs.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { DonationsModule } from './modules/donations/donations.module';
+import { CacheModule } from './common/cache/cache.module';
+import { EmailModule } from './modules/email/email.module';
 
 @Module({
   imports: [
@@ -43,6 +45,9 @@ import { DonationsModule } from './modules/donations/donations.module';
         BACKEND_URL: Joi.string().optional().allow(''),
         CORS_ORIGINS: Joi.string().optional().allow(''),
         NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
+        REDIS_URL: Joi.string().uri().optional().allow(''),
+        RESEND_API_KEY: Joi.string().optional().allow(''),
+        EMAIL_FROM: Joi.string().optional().allow(''),
       }),
     }),
     ServeStaticModule.forRoot({
@@ -57,6 +62,8 @@ import { DonationsModule } from './modules/donations/donations.module';
     PacksModule,
     PaymentsModule,
     DonationsModule,
+    CacheModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [

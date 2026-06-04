@@ -1,4 +1,4 @@
-import { IsOptional, IsString, Matches, MaxLength, IsNotEmpty } from 'class-validator';
+import { IsOptional, IsString, IsBoolean, IsNumber, Min, Matches, MaxLength, IsNotEmpty } from 'class-validator';
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -38,12 +38,15 @@ export class UpdateProfileDto {
   niche?: string;
 
   @IsOptional()
+  @IsBoolean()
   instagram?: boolean;
 
   @IsOptional()
+  @IsBoolean()
   tiktok?: boolean;
 
   @IsOptional()
+  @IsBoolean()
   youtube?: boolean;
 
   @IsOptional()
@@ -51,6 +54,8 @@ export class UpdateProfileDto {
   mpAccessToken?: string;
 
   @IsOptional()
+  @IsNumber()
+  @Min(0)
   pinaPrice?: number;
 
   @IsOptional()
@@ -58,6 +63,8 @@ export class UpdateProfileDto {
   donationGoalTitle?: string;
 
   @IsOptional()
+  @IsNumber()
+  @Min(0)
   donationGoalAmount?: number;
 
   @IsOptional()

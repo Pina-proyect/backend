@@ -35,6 +35,11 @@ model Creator {
   // Versión de tokens para invalidar refresh tokens en logout
   tokenVersion       Int      @default(0)
   verificationStatus String   @default("pending")
+  emailVerified      Boolean  @default(false)
+  verificationToken  String?
+  verificationTokenExpires DateTime?
+  resetToken         String?
+  resetTokenExpires  DateTime?
   selfiePath         String?
   photoPath          String?
   // Slug único y opcional para el perfil público

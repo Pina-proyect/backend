@@ -1,8 +1,10 @@
-import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { Creator } from '@prisma/client';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 import { CreatorRepository } from '../repositories/creator.repository';
+import { EmailService } from '../../email/email.service';
 import { LoginCreatorDto } from '../dto/login-creator.dto';
 import { LoginResponseDto } from '../dto/login-response.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
@@ -15,9 +17,12 @@ import { UpdateProfileDto } from '../dto/update-profile.dto';
  */
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly creatorRepository: CreatorRepository,
     private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
   ) {}
 
   /**
@@ -113,6 +118,14 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
+    if (!user.emailVerified) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        message: 'EMAIL_NOT_VERIFIED',
+        code: 'EMAIL_NOT_VERIFIED',
+      });
+    }
+
     const tokens = this.generateTokens(user);
     return {
       accessToken: tokens.accessToken,
@@ -158,6 +171,87 @@ export class AuthService {
       // Para evitar enumeración de usuarios, respondemos 401 si falla.
       throw new UnauthorizedException('Refresh token inválido');
     }
+  }
+
+  async resendVerificationEmail(email: string): Promise<{ message: string }> {
+    const creator = await this.creatorRepository.findByEmail(email);
+    if (!creator || creator.emailVerified) {
+      return { message: 'Si el email existe, recibirás un enlace de verificación.' };
+    }
+
+    const verificationToken = randomBytes(32).toString('hex');
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await this.creatorRepository.update(creator.id, {
+      verificationToken,
+      verificationTokenExpires,
+    } as any);
+
+    await this.emailService.sendVerificationEmail(creator.email, verificationToken);
+
+    return { message: 'Si el email existe, recibirás un enlace de verificación.' };
+  }
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const creator = await this.creatorRepository.findByEmail(email);
+    if (!creator) {
+      return { message: 'Si el email existe, recibirás un enlace para restablecer tu contraseña.' };
+    }
+
+    const resetToken = randomBytes(32).toString('hex');
+    const resetTokenExpires = new Date(Date.now() + 60 * 60 * 1000);
+
+    await this.creatorRepository.update(creator.id, {
+      resetToken,
+      resetTokenExpires,
+    } as any);
+
+    await this.emailService.sendPasswordResetEmail(creator.email, resetToken);
+
+    return { message: 'Si el email existe, recibirás un enlace para restablecer tu contraseña.' };
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    const creator = await this.creatorRepository.findByResetToken(token);
+    if (!creator) {
+      throw new BadRequestException('Token de restablecimiento inválido');
+    }
+
+    if (creator.resetTokenExpires && creator.resetTokenExpires < new Date()) {
+      throw new BadRequestException('Token de restablecimiento expirado');
+    }
+
+    const saltRoundsRaw = process.env.BCRYPT_SALT_ROUNDS || '10';
+    const saltRounds = Number(saltRoundsRaw);
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    await this.creatorRepository.update(creator.id, {
+      password: hashedPassword,
+      resetToken: null,
+      resetTokenExpires: null,
+      tokenVersion: { increment: 1 },
+    } as any);
+
+    return { message: 'Contraseña restablecida correctamente.' };
+  }
+
+  async verifyEmail(token: string): Promise<{ message: string }> {
+    const creator = await this.creatorRepository.findByVerificationToken(token);
+    if (!creator) {
+      throw new BadRequestException('Token de verificación inválido');
+    }
+
+    if (creator.verificationTokenExpires && creator.verificationTokenExpires < new Date()) {
+      throw new BadRequestException('Token de verificación expirado');
+    }
+
+    await this.creatorRepository.update(creator.id, {
+      emailVerified: true,
+      verificationToken: null,
+      verificationTokenExpires: null,
+    } as any);
+
+    return { message: 'Email verificado correctamente' };
   }
 
   /**

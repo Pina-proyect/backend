@@ -9,6 +9,7 @@ import {
   Req,
   Res,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
@@ -137,6 +138,48 @@ export class AuthController {
       refreshToken: tokenFromCookie ?? dto?.refreshToken,
     };
     await this.authService.logout(effectiveDto);
+  }
+
+  /**
+   * Envía email con token para restablecer contraseña.
+   */
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  async forgotPassword(@Body('email') email: string): Promise<{ message: string }> {
+    return this.authService.forgotPassword(email);
+  }
+
+  /**
+   * Restablece la contraseña usando token.
+   */
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  async resetPassword(
+    @Body('token') token: string,
+    @Body('password') password: string,
+  ): Promise<{ message: string }> {
+    return this.authService.resetPassword(token, password);
+  }
+
+  /**
+   * Verifica el email de un creador mediante token.
+   */
+  @Get('verify-email')
+  @HttpCode(HttpStatus.OK)
+  async verifyEmail(@Query('token') token: string): Promise<{ message: string }> {
+    return this.authService.verifyEmail(token);
+  }
+
+  /**
+   * Reenvía el email de verificación.
+   */
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  async resendVerification(@Body('email') email: string): Promise<{ message: string }> {
+    return this.authService.resendVerificationEmail(email);
   }
 
   /**

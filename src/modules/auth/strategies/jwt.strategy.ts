@@ -2,10 +2,14 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { CreatorRepository } from '../repositories/creator.repository';
+import { CacheService } from '../../../common/cache/cache.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly creatorRepository: CreatorRepository) {
+  constructor(
+    private readonly creatorRepository: CreatorRepository,
+    private readonly cache: CacheService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -13,18 +17,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  /**
-   * validate
-   * Se ejecuta automáticamente tras decodificar el JWT.
-   * El payload contiene { email, sub }.
-   */
-  async validate(payload: any) {
+  async validate(payload: { sub: string }) {
     const { sub: userId } = payload;
+    const cacheKey = `user:${userId}`;
+
+    const cached = await this.cache.get<object>(cacheKey);
+    if (cached) return cached;
+
     const user = await this.creatorRepository.findById(userId);
     if (!user) {
       throw new UnauthorizedException('Token inválido o usuario no encontrado');
     }
-    // El objeto retornado aquí es el que se inyecta en req.user
+
+    await this.cache.set(cacheKey, user, 300);
     return user;
   }
 }
