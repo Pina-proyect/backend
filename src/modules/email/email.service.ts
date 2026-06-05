@@ -34,7 +34,13 @@ export class EmailService {
 
   private async sendEmail(to: string, subject: string, text: string): Promise<void> {
     if (!this.resend) {
-      this.logger.warn(`Email no enviado (sin API key). To: ${to}, Subject: ${subject}`);
+      this.logger.warn(`[DEV] Email no enviado (sin RESEND_API_KEY). Modo desarrollo — link disponible abajo:`);
+      this.logger.warn(`[DEV] Para: ${to}`);
+      this.logger.warn(`[DEV] Asunto: ${subject}`);
+      const linkMatch = text.match(/https?:\/\/[^\s]+/);
+      if (linkMatch) {
+        this.logger.warn(`[DEV] Link: ${linkMatch[0]}`);
+      }
       return;
     }
 
