@@ -1,8 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import * as cookieParser from 'cookie-parser';
 import * as express from 'express';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -32,6 +34,9 @@ export async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+
+  const configService = app.get(ConfigService);
+  app.useGlobalFilters(new GlobalExceptionFilter(configService));
 
   app.setGlobalPrefix('api/pina');
 

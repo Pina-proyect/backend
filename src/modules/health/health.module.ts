@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { HealthController } from './health.controller';
+import { PrismaService } from 'prisma/prisma.service';
+import { CacheService } from '../../common/cache/cache.service';
 
-// Módulo de Salud del sistema.
-// Expone un endpoint simple para verificar disponibilidad del backend.
 @Module({
   controllers: [HealthController],
+  providers: [PrismaService, CacheService],
 })
 export class HealthModule {}

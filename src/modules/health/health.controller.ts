@@ -1,23 +1,40 @@
 import { Controller, Get } from '@nestjs/common';
+import { PrismaService } from 'prisma/prisma.service';
+import { CacheService } from '../../common/cache/cache.service';
 
-/**
- * HealthController
- * Endpoint de salud para monitoreo básico.
- * Ruta final: GET /pina/health
- */
 @Controller('health')
 export class HealthController {
-  /**
-   * Devuelve un estado básico del backend.
-   * Nota: En producción, se puede extender con chequeos de DB/Redis.
-   */
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: CacheService,
+  ) {}
+
   @Get()
-  getHealth() {
+  async getHealth() {
+    const checks: Record<string, string> = {};
+
+    try {
+      await this.prisma.$queryRaw`SELECT 1`;
+      checks.database = 'ok';
+    } catch {
+      checks.database = 'error';
+    }
+
+    try {
+      await this.cache.get('health:ping');
+      checks.redis = 'ok';
+    } catch {
+      checks.redis = 'error';
+    }
+
+    const allOk = Object.values(checks).every((s) => s === 'ok');
+
     return {
-      status: 'ok',
+      status: allOk ? 'ok' : 'degraded',
       timestamp: new Date().toISOString(),
       env: process.env.NODE_ENV || 'development',
       version: process.env.npm_package_version || 'unknown',
+      checks,
     };
   }
 }

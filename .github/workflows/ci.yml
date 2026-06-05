@@ -17,7 +17,7 @@ jobs:
     # Ejecuta todos los comandos dentro de la carpeta del proyecto
     defaults:
       run:
-        working-directory: pinabackend-history
+        working-directory: backend-nest
 
     # Servicio de Postgres para tests. Evita depender de bases locales.
     services:
@@ -51,7 +51,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'yarn'
-          cache-dependency-path: 'pinabackend-history/yarn.lock'
+          cache-dependency-path: 'backend-nest/yarn.lock'
 
       - name: Habilitar Corepack
         run: corepack enable
@@ -89,3 +89,41 @@ jobs:
       # 8) Ejecutar tests end-to-end
       - name: Ejecutar tests e2e
         run: yarn test:e2e --ci
+
+  security:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend-nest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Secret scanning (trufflehog)
+        uses: trufflehog/trufflehog-actions-scan@main
+        with:
+          scanArguments: "--results=verified --fail --no-verification"
+
+      - name: Configurar Node y Yarn
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: 'backend-nest/yarn.lock'
+
+      - name: Habilitar Corepack
+        run: corepack enable
+
+      - name: Activar Yarn 4.11.0 con Corepack
+        run: corepack prepare yarn@4.11.0 --activate
+
+      - name: Instalar dependencias
+        run: yarn install --immutable
+
+      - name: Dependency audit
+        run: yarn npm audit --all --severity high
+
+      - name: ESLint security rules
+        run: yarn lint:security

@@ -9,7 +9,9 @@ import {
   HttpStatus,
   HttpCode,
   ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import { PacksService } from './packs.service';
 import { PackAccessGuard } from './guards/pack-access.guard';
@@ -17,7 +19,10 @@ import { CreatePackDto } from './dto/create-pack.dto';
 
 @Controller('packs')
 export class PacksController {
-  constructor(private readonly packsService: PacksService) {}
+  constructor(
+    private readonly packsService: PacksService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post()
   @UseGuards(AuthGuard('jwt'))
@@ -82,6 +87,9 @@ export class PacksController {
   @Post('simulate-purchase')
   @UseGuards(AuthGuard('jwt'))
   async simulatePurchase(@Body('packId') packId: string, @Req() req: any) {
+    if (this.configService.get('NODE_ENV') === 'production') {
+      throw new NotFoundException();
+    }
     return this.packsService.grantAccess(req.user.id, packId);
   }
 }

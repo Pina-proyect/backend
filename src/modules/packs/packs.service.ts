@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
+import { CacheService } from '../../common/cache/cache.service';
 
 @Injectable()
 export class PacksService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: CacheService,
+  ) {}
 
   async createPack(creatorId: string, data: {
     title: string;
@@ -86,7 +90,12 @@ export class PacksService {
   }
 
   async getAllCategories() {
-    return this.prisma.category.findMany();
+    const cacheKey = 'categories';
+    const cached = await this.cache.get<object[]>(cacheKey);
+    if (cached) return cached;
+    const categories = await this.prisma.category.findMany();
+    await this.cache.set(cacheKey, categories, 900);
+    return categories;
   }
 
   async getPacksByCreatorSlug(slug: string) {
