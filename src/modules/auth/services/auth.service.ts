@@ -127,9 +127,11 @@ export class AuthService {
     }
 
     const tokens = this.generateTokens(user);
+    const { password, resetToken, resetTokenExpires, verificationToken, verificationTokenExpires, mpRefreshToken, nationalId, ...safeUser } = user;
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
+      user: safeUser,
     };
   }
 
@@ -148,9 +150,11 @@ export class AuthService {
         throw new UnauthorizedException('Refresh token inválido');
       }
       const tokens = this.generateTokens(user);
+      const { password, resetToken, resetTokenExpires, verificationToken, verificationTokenExpires, mpRefreshToken, nationalId, ...safeUser } = user;
       return {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
+        user: safeUser,
       };
     } catch {
       throw new UnauthorizedException('Refresh token inválido');

@@ -52,20 +52,18 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<LoginResponseDto> {
     // Valida credenciales
-    const tokens = await this.authService.login(loginDto);
+    const result = await this.authService.login(loginDto);
     // Envía el refresh token en cookie HttpOnly
-    res.cookie(this.REFRESH_COOKIE, tokens.refreshToken, this.cookieOptions());
-    // Retorna el access token en el body
-    return {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-    };
+    res.cookie(this.REFRESH_COOKIE, result.refreshToken, this.cookieOptions());
+    // Retorna tokens + datos del usuario
+    return result;
   }
 
   /**
    * Retorna el perfil del usuario actualmente autenticado.
    * Requiere el token JWT en el header Authorization.
    */
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
   async getMe(@Req() req: Request): Promise<Creator> {
