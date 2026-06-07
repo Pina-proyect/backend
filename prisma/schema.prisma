@@ -16,96 +16,101 @@ datasource db {
 }
 
 model Creator {
-  id                 String   @id @default(uuid())
-  fullName           String
-  email              String   @unique
+  id                       String    @id @default(uuid())
+  fullName                 String
+  email                    String    @unique
   // Rol del usuario: 'CREATOR' o 'CONSUMER'
-  role               String   @default("CREATOR")
+  role                     String    @default("CREATOR")
   // Contraseña opcional para cuentas OAuth (Google/Facebook)
-  password           String?
+  password                 String?
   // Teléfono opcional: proveedores OAuth no lo suministran
-  phone              String?
+  phone                    String?
   // DNI opcional: se completará en onboarding (para cuentas OAuth)
-  nationalId         String?  @unique
-  birthDate          DateTime
+  nationalId               String?   @unique
+  birthDate                DateTime
   // Proveedor de autenticación (por defecto credenciales)
-  provider           String   @default("credentials")
+  provider                 String    @default("credentials")
   // ID único proporcionado por el proveedor (Google/Facebook)
-  providerId         String?
+  providerId               String?
   // Versión de tokens para invalidar refresh tokens en logout
-  tokenVersion       Int      @default(0)
-  verificationStatus String   @default("pending")
-  emailVerified      Boolean  @default(false)
-  verificationToken  String?
+  tokenVersion             Int       @default(0)
+  verificationStatus       String    @default("pending")
+  emailVerified            Boolean   @default(false)
+  verificationToken        String?
   verificationTokenExpires DateTime?
-  resetToken         String?
-  resetTokenExpires  DateTime?
-  selfiePath         String?
-  photoPath          String?
+  resetToken               String?
+  resetTokenExpires        DateTime?
+  selfiePath               String?
+  photoPath                String?
   // Slug único y opcional para el perfil público
-  slug               String?  @unique
+  slug                     String?   @unique
   // Biografía opcional con límite de 255 caracteres
-  bio                String?  @db.VarChar(255)
+  bio                      String?   @db.VarChar(255)
   // Ubicación o país
-  country            String?
+  country                  String?
   // Nicho creativo seleccionado (fotografía, cine, etc.)
-  niche              String?
+  niche                    String?
   // Género o título de denominación del perfil ('creador' o 'creadora')
-  gender             String   @default("creadora")
+  gender                   String    @default("creadora")
   // Redes sociales (booleanos o handles, por ahora booleanos para el MVP)
-  instagram          Boolean  @default(false)
-  tiktok             Boolean  @default(false)
-  youtube            Boolean  @default(false)
+  instagram                Boolean   @default(false)
+  tiktok                   Boolean   @default(false)
+  youtube                  Boolean   @default(false)
   // Configuración de Donaciones (Piñas)
-  mpAccessToken      String?
-  mpRefreshToken     String?
-  mpPublicKey        String?
-  pinaPrice          Float    @default(1000)
-  donationGoalTitle  String?  @db.VarChar(100)
-  donationGoalAmount Float?
+  mpAccessToken            String?
+  mpRefreshToken           String?
+  mpPublicKey              String?
+  pinaPrice                Float     @default(1000)
+  donationGoalTitle        String?   @db.VarChar(100)
+  donationGoalAmount       Float?
 
   // Relación con el contenido multimedia
-  media              Media[]
+  media             Media[]
   // Relación con los paquetes de contenido creados por este usuario
-  packs              ContentPack[]
+  packs             ContentPack[]
   // Relación con las donaciones recibidas
-  donationsReceived  Donation[] @relation("CreatorDonations")
+  donationsReceived Donation[]    @relation("CreatorDonations")
   // Relación con las donaciones realizadas (si el usuario está registrado)
-  donationsMade      Donation[] @relation("DonorDonations")
-  
-  createdAt          DateTime @default(now())
+  donationsMade     Donation[]    @relation("DonorDonations")
+
+  createdAt DateTime @default(now())
   // Marca de actualización automática
-  updatedAt          DateTime @updatedAt
+  updatedAt DateTime @updatedAt
 
   // Índice para búsqueda por proveedor/ID
   @@unique([provider, providerId])
 }
 
 model Donation {
-  id          String   @id @default(uuid())
-  amount      Float
-  quantity    Int      @default(1)
-  message     String?  @db.VarChar(500)
-  
+  id       String  @id @default(uuid())
+  amount   Float
+  quantity Int     @default(1)
+  message  String? @db.VarChar(500)
+
   // Si el donante es anónimo
-  donorName   String?
-  
+  donorName String?
+
   // Si el donante está registrado
-  donorId     String?
-  donor       Creator? @relation("DonorDonations", fields: [donorId], references: [id])
-  
+  donorId String?
+  donor   Creator? @relation("DonorDonations", fields: [donorId], references: [id])
+
   // A quién se le dona
-  creatorId   String
-  creator     Creator  @relation("CreatorDonations", fields: [creatorId], references: [id])
-  
-  // pending, approved, rejected
-  status      String   @default("pending")
-  
+  creatorId String
+  creator   Creator @relation("CreatorDonations", fields: [creatorId], references: [id])
+
+  // pending, approved, rejected, failed
+  status String @default("pending")
+
   // ID de la transacción en MercadoPago
-  paymentId   String?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  paymentId String?
+
+  // ID de la preference de MercadoPago (guardado al crear la preference)
+  // Usado por el webhook para encontrar la Donation via metadata.donation_id
+  preferenceId        String?   @unique
+  preferenceCreatedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Category {
@@ -116,59 +121,59 @@ model Category {
 }
 
 model ContentPack {
-  id          String    @id @default(uuid())
+  id          String  @id @default(uuid())
   title       String
-  description String?   @db.VarChar(500)
-  price       Float     @default(0)
-  status      String    @default("active") // active, hidden, archived
-  
-  creatorId   String
-  creator     Creator   @relation(fields: [creatorId], references: [id])
-  
-  categoryId  String
-  category    Category  @relation(fields: [categoryId], references: [id])
-  
-  media       Media[]   @relation("PackMedia")
-  accesses    Access[]
+  description String? @db.VarChar(500)
+  price       Float   @default(0)
+  status      String  @default("active") // active, hidden, archived
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  creatorId String
+  creator   Creator @relation(fields: [creatorId], references: [id])
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  media    Media[]  @relation("PackMedia")
+  accesses Access[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Media {
-  id        String   @id @default(uuid())
+  id        String  @id @default(uuid())
   creatorId String
-  creator   Creator  @relation(fields: [creatorId], references: [id])
-  
-  title     String?
+  creator   Creator @relation(fields: [creatorId], references: [id])
+
+  title    String?
   // Path o Key del archivo (ej: uploads/video-123.mp4)
-  url       String
+  url      String
   // Tipo de archivo: video, image, document
-  type      String
-  mimetype  String
-  size      Int
-  
+  type     String
+  mimetype String
+  size     Int
+
   // Para control de visibilidad
-  isPrivate Boolean  @default(true)
-  
+  isPrivate Boolean @default(true)
+
   // Relación con los paquetes que contienen este medio (M:N)
-  packs     ContentPack[] @relation("PackMedia")
-  
+  packs ContentPack[] @relation("PackMedia")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Access {
-  id          String   @id @default(uuid())
+  id     String      @id @default(uuid())
   // ID del usuario que tiene el acceso (puede ser otro Creator o un Fan futuro)
-  userId      String
-  packId      String
-  pack        ContentPack @relation(fields: [packId], references: [id])
-  
+  userId String
+  packId String
+  pack   ContentPack @relation(fields: [packId], references: [id])
+
   // Tipo de acceso: 'purchase', 'gift', 'subscription'
-  type        String   @default("purchase")
-  
-  createdAt   DateTime @default(now())
-  
+  type String @default("purchase")
+
+  createdAt DateTime @default(now())
+
   @@unique([userId, packId])
 }
