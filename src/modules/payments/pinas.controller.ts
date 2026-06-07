@@ -1,19 +1,26 @@
 import { Controller, Post, Body, Get, Param, BadRequestException, InternalServerErrorException } from '@nestjs/common';
-import { PaymentsService } from '../payments/payments.service';
+import { PaymentsService } from './payments.service';
 import { PrismaService } from 'prisma/prisma.service';
-import { DonationPreferenceDto } from './dto/donation-preference.dto';
+import { DonationPreferenceDto } from '../donations/dto/donation-preference.dto';
 
-@Controller('donations')
-export class DonationsController {
+/**
+ * Spec-style routes aligned to mp_agent.md:
+ * - POST /payments/pinas         (3.3) — donation creation
+ * - GET  /creators/:creatorId/donations (3.2) — public donation list
+ *
+ * These are at root level (not under /donations) to match the spec.
+ * The legacy /donations/preference and /donations/public/:id still work
+ * via DonationsController and will be removed in v1.18.
+ */
+@Controller()
+export class PinasController {
   constructor(
     private readonly paymentsService: PaymentsService,
     private readonly prisma: PrismaService
   ) {}
 
-  @Post('preference')
-  async createDonationPreference(
-    @Body() body: DonationPreferenceDto,
-  ) {
+  @Post('payments/pinas')
+  async createPaymentPreference(@Body() body: DonationPreferenceDto) {
     const { creatorId, quantity, message, donorName, donorId } = body;
 
     const creator = await this.prisma.creator.findUnique({ where: { id: creatorId } });
@@ -27,8 +34,6 @@ export class DonationsController {
 
     const amount = (creator.pinaPrice || 1000) * quantity;
 
-    // 1) Crear Donation en estado pending ANTES de llamar a MP
-    // Spec mp_agent.md 3.3.4: persistir la intención de donación primero.
     const donation = await this.prisma.donation.create({
       data: {
         creatorId,
@@ -42,7 +47,6 @@ export class DonationsController {
     });
 
     try {
-      // 2) Crear preference en MP
       const preference = await this.paymentsService.createDonationPreference(
         creatorId,
         quantity,
@@ -53,7 +57,6 @@ export class DonationsController {
         donation.id,
       );
 
-      // 3) Guardar preferenceId en la Donation
       await this.prisma.donation.update({
         where: { id: donation.id },
         data: {
@@ -64,26 +67,20 @@ export class DonationsController {
 
       return preference;
     } catch (error: any) {
-      // 4) Si falla la preference, marcar Donation como failed
-      // (no la borramos: queda como evidencia para debugging)
       await this.prisma.donation.update({
         where: { id: donation.id },
         data: { status: 'failed' },
       });
-      console.error('[DONATIONS] Error creating preference:', error);
+      console.error('[PINAS] Error creating preference:', error);
       throw new InternalServerErrorException(
         `Error al crear preferencia de donación: ${error?.message || 'unknown'}`,
       );
     }
   }
 
-  @Get('public/:creatorId')
-  async getPublicDonations(@Param('creatorId') creatorId: string) {
-    return this.fetchApprovedDonations(creatorId);
-  }
-
-  private async fetchApprovedDonations(creatorId: string) {
-    const donations = await this.prisma.donation.findMany({
+  @Get('creators/:creatorId/donations')
+  async getCreatorDonations(@Param('creatorId') creatorId: string) {
+    return this.prisma.donation.findMany({
       where: { creatorId, status: 'approved' },
       orderBy: { createdAt: 'desc' },
       take: 10,
@@ -93,9 +90,8 @@ export class DonationsController {
         message: true,
         donorName: true,
         createdAt: true,
-        donor: { select: { fullName: true, slug: true } }
-      }
+        donor: { select: { fullName: true, slug: true } },
+      },
     });
-    return donations;
   }
 }
