@@ -41,8 +41,15 @@ export class PaymentsController {
 
   @Get('mercadopago/auth')
   async mercadopagoAuth(@Query('creatorId') creatorId: string, @Res() res: Response) {
-    const url = this.paymentsService.getMercadoPagoAuthUrl(creatorId);
-    return res.redirect(url);
+    try {
+      const url = this.paymentsService.getMercadoPagoAuthUrl(creatorId);
+      return res.redirect(url);
+    } catch (error: any) {
+      console.error('[MP OAUTH] Error generando URL:', error?.message);
+      const frontendUrl = process.env.FRONTEND_URL || 'https://pina-delta.vercel.app';
+      const msg = encodeURIComponent(error?.message || 'oauth_config_missing');
+      return res.redirect(`${frontendUrl}/settings?tab=monetization&connected=error&message=${msg}`);
+    }
   }
 
   @Get('mercadopago/callback')

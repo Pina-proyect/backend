@@ -249,11 +249,23 @@ export class PaymentsService {
 
   /**
    * Genera la URL de autorización OAuth de Mercado Pago
+   * Lanza InternalServerErrorException si falta MP_CLIENT_ID o MP_REDIRECT_URI
    */
   getMercadoPagoAuthUrl(creatorId: string): string {
     const clientId = this.configService.get('MP_CLIENT_ID', '');
-    const redirectUri = encodeURIComponent(this.configService.get('MP_REDIRECT_URI', ''));
-    return `https://auth.mercadopago.com/authorization?client_id=${clientId}&response_type=code&platform_id=mp&state=${creatorId}&redirect_uri=${redirectUri}`;
+    const redirectUri = this.configService.get('MP_REDIRECT_URI', '');
+
+    if (!clientId) {
+      console.error('[MP OAUTH] MP_CLIENT_ID no configurado en backend');
+      throw new Error('MP_CLIENT_ID no configurado en el backend. Pedile al admin que lo agregue en Render env vars.');
+    }
+    if (!redirectUri) {
+      console.error('[MP OAUTH] MP_REDIRECT_URI no configurado en backend');
+      throw new Error('MP_REDIRECT_URI no configurado en el backend. Pedile al admin que lo agregue en Render env vars.');
+    }
+
+    const encodedRedirect = encodeURIComponent(redirectUri);
+    return `https://auth.mercadopago.com/authorization?client_id=${clientId}&response_type=code&platform_id=mp&state=${creatorId}&redirect_uri=${encodedRedirect}`;
   }
 
   /**
