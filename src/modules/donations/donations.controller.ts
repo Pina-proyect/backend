@@ -49,7 +49,8 @@ export class DonationsController {
         amount,
         message,
         donorName,
-        donorId
+        donorId,
+        donation.id,
       );
 
       // 3) Guardar preferenceId en la Donation

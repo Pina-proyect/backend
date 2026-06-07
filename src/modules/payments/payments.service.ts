@@ -72,7 +72,8 @@ export class PaymentsService {
     amount: number,
     message?: string,
     donorName?: string,
-    donorId?: string
+    donorId?: string,
+    donationId?: string,
   ) {
     const creator = await this.prisma.creator.findUnique({ where: { id: creatorId } });
     if (!creator) throw new Error('Creador no encontrado');
@@ -93,18 +94,29 @@ export class PaymentsService {
     const body = {
       items: [
         {
-          id: `donation-${creatorId}`,
+          id: `donation-${donationId ?? creatorId}`,
           title: `${quantity} Piña(s) para ${creator.fullName}`,
           unit_price: Number(amount),
           quantity: 1,
           currency_id: 'ARS'
         }
       ],
-      externalReference: JSON.stringify({ type: 'DONATION', creatorId, quantity, amount, message, donorName, donorId }),
+      // MP lo guarda en la preference y lo devuelve al consultar el pago via /v1/payments/{id}
+      // Es la ancla principal del webhook para encontrar la Donation
+      metadata: {
+        donation_id: donationId,
+        creator_id: creatorId,
+        quantity,
+        amount,
+        ...(message ? { message } : {}),
+        ...(donorName ? { donor_name: donorName } : {}),
+        ...(donorId ? { donor_id: donorId } : {}),
+      },
+      externalReference: JSON.stringify({ type: 'DONATION', donationId, creatorId, quantity, amount, message, donorName, donorId }),
       backUrls: {
-        success: `${frontendUrl}/payment-status?status=success`,
-        failure: `${frontendUrl}/payment-status?status=failure`,
-        pending: `${frontendUrl}/payment-status?status=pending`
+        success: `${frontendUrl}/pina/payment/success`,
+        failure: `${frontendUrl}/pina/payment/failure`,
+        pending: `${frontendUrl}/pina/payment/pending`,
       },
       autoReturn: 'approved',
       notificationUrl: this.getWebhookUrl(creatorId),
