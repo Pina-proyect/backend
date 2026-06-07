@@ -141,7 +141,10 @@ export class PaymentsService {
 
   validateWebhookSignature(xSignature: string, xRequestId: string, dataID: string): boolean {
     const secret = this.configService.get<string>('MP_WEBHOOK_SECRET');
-    if (!secret) return true; // si no hay secret configurado, no validamos
+    if (!secret) {
+      console.warn('[WEBHOOK] MP_WEBHOOK_SECRET no configurado, rechazando webhook por seguridad');
+      return false;
+    }
 
     const parts = xSignature.split(',');
     let ts = '';
