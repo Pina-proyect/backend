@@ -186,7 +186,7 @@ export class PaymentsService {
        try {
          // Determine which access token to use
           let accessToken = this.configService.get<string>('MP_ACCESS_TOKEN', '');
-         
+
          if (creatorId) {
            const creator = await this.prisma.creator.findUnique({ where: { id: creatorId } });
            if (creator && creator.mpAccessToken) {
@@ -200,54 +200,68 @@ export class PaymentsService {
          });
 
          if (!response.ok) return { received: false, error: 'Payment not found' };
-         
+
          const paymentData = await response.json();
+         const paymentIdStr = paymentData.id?.toString();
 
-         if (paymentData.status === 'approved') {
-           const extRef = JSON.parse(paymentData.external_reference || '{}');
-           
-           if (extRef.type === 'DONATION') {
-              // Es una donación
-              const { creatorId, quantity, amount, message, donorName, donorId } = extRef;
-              
-              // Revisamos si ya procesamos esta donación
-              const existingDonation = await this.prisma.donation.findFirst({
-                where: { paymentId: paymentData.id.toString() }
-              });
+         // 1) Determinar el donationId de la preference
+         //    Fuente principal: metadata.donation_id (commit 4)
+         //    Fallback: external_reference.donationId (legacy)
+         const extRef = JSON.parse(paymentData.external_reference || '{}');
+         const donationId: string | undefined =
+           paymentData.metadata?.donation_id ?? extRef.donationId;
 
-              if (!existingDonation) {
-                await this.prisma.donation.create({
-                  data: {
-                    creatorId,
-                    amount: Number(amount),
-                    quantity: Number(quantity),
-                    message: message || null,
-                    donorName: donorName || null,
-                    donorId: donorId || null,
-                    status: 'approved',
-                    paymentId: paymentData.id.toString()
-                  }
-                });
-                console.log(`[PAYMENT SUCCESS] Donación de ${quantity} piñas para creador ${creatorId}`);
-              }
-           } else {
-             // Es la compra de un Pack (Flujo original)
-             const { userId, packId } = extRef;
-             if (userId && packId) {
-               const existingAccess = await this.prisma.access.findFirst({
-                 where: { userId, packId }
+         if (donationId) {
+           // Flujo DONATION: la Donation ya existe en DB (commit 2) con status='pending'
+           const donation = await this.prisma.donation.findUnique({ where: { id: donationId } });
+
+           if (!donation) {
+             console.warn(`[WEBHOOK] donationId=${donationId} not found in DB`);
+             return { received: true };
+           }
+
+           // Idempotencia: si ya está approved, skip
+           if (donation.status === 'approved') {
+             console.log(`[WEBHOOK] donationId=${donationId} already approved, skipping`);
+             return { received: true };
+           }
+
+           const newStatus =
+             paymentData.status === 'approved' ? 'approved' :
+             paymentData.status === 'rejected' ? 'rejected' :
+             'pending';
+
+           await this.prisma.donation.update({
+             where: { id: donationId },
+             data: {
+               status: newStatus,
+               paymentId: paymentIdStr,
+             },
+           });
+
+           console.log(
+             `[WEBHOOK] donationId=${donationId} status=${newStatus} paymentId=${paymentIdStr}`,
+           );
+           return { received: true };
+         }
+
+         // 2) Flujo PACK (legacy, sin donationId)
+         if (paymentData.status === 'approved' && extRef.type !== 'DONATION') {
+           const { userId, packId } = extRef;
+           if (userId && packId) {
+             const existingAccess = await this.prisma.access.findFirst({
+               where: { userId, packId }
+             });
+
+             if (!existingAccess) {
+               await this.prisma.access.create({
+                 data: {
+                   userId,
+                   packId,
+                   type: 'PACK'
+                 }
                });
-
-               if (!existingAccess) {
-                 await this.prisma.access.create({
-                   data: {
-                     userId,
-                     packId,
-                     type: 'PACK'
-                   }
-                 });
-                 console.log(`[PAYMENT SUCCESS] Pack ${packId} liberado para usuario ${userId}`);
-               }
+               console.log(`[WEBHOOK] Pack ${packId} liberado para usuario ${userId}`);
              }
            }
          }
