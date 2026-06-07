@@ -78,6 +78,30 @@ export class DonationsController {
 
   @Get('public/:creatorId')
   async getPublicDonations(@Param('creatorId') creatorId: string) {
+    return this.fetchApprovedDonations(creatorId);
+  }
+
+  /**
+   * Spec-style path aligned to mp_agent.md 3.2:
+   * GET /creators/:creatorId/donations
+   * @deprecated use /donations/public/:creatorId OR this — same handler
+   */
+  @Get('creators/:creatorId/donations')
+  async getCreatorDonationsSpec(@Param('creatorId') creatorId: string) {
+    return this.fetchApprovedDonations(creatorId);
+  }
+
+  /**
+   * Spec-style path aligned to mp_agent.md 3.3:
+   * POST /payments/pinas — alias of /donations/preference
+   * @deprecated both work
+   */
+  @Post('payments/pinas')
+  async createPaymentPreferenceSpec(@Body() body: DonationPreferenceDto) {
+    return this.createDonationPreference(body);
+  }
+
+  private async fetchApprovedDonations(creatorId: string) {
     const donations = await this.prisma.donation.findMany({
       where: { creatorId, status: 'approved' },
       orderBy: { createdAt: 'desc' },
