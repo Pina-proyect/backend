@@ -139,6 +139,9 @@ export class PaymentsService {
    * Resuelve la URL de notificación de Mercado Pago.
    * En producción usa BACKEND_URL directamente (ignora NGROK_URL aunque esté seteado).
    * En desarrollo permite NGROK_URL para tuneles locales.
+   *
+   * Usa el path spec-style /webhooks/mercadopago (commit 6). El path viejo
+   * /payments/webhook se mantiene como alias en el controller.
    */
   getWebhookUrl(creatorId?: string): string {
     const backendUrl = this.configService.get<string>('BACKEND_URL', 'http://localhost:4000');
@@ -148,7 +151,7 @@ export class PaymentsService {
       : (this.configService.get<string>('NGROK_URL') || backendUrl);
 
     const qs = creatorId ? `?creatorId=${creatorId}` : '';
-    return `${base}/api/pina/payments/webhook${qs}`;
+    return `${base}/api/pina/webhooks/mercadopago${qs}`;
   }
 
   validateWebhookSignature(xSignature: string, xRequestId: string, dataID: string): boolean {
