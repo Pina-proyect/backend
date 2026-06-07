@@ -29,7 +29,6 @@ export class PaymentsService {
 
     const preference = new Preference(this.client);
 
-    const backendUrl = this.configService.get('BACKEND_URL', 'http://localhost:4000');
     const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
 
     const body = {
@@ -49,9 +48,9 @@ export class PaymentsService {
         pending: `${frontendUrl}/payment-status?status=pending`
       },
       autoReturn: 'approved',
-      notificationUrl: `${this.configService.get('NGROK_URL', backendUrl)}/api/pina/payments/webhook`,
+      notificationUrl: this.getWebhookUrl(),
       // Lógica de marketplace_fee (opcional según si es cuenta Marketplace o no)
-      // marketplace_fee: Number(pack.price) * 0.07 
+      // marketplace_fee: Number(pack.price) * 0.07
     };
 
     try {
@@ -86,7 +85,6 @@ export class PaymentsService {
     });
     const preference = new Preference(creatorClient);
 
-    const backendUrl = this.configService.get('BACKEND_URL', 'http://localhost:4000');
     const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
 
     // Fee del 7% para Pina (Marketplace Fee)
@@ -109,7 +107,7 @@ export class PaymentsService {
         pending: `${frontendUrl}/payment-status?status=pending`
       },
       autoReturn: 'approved',
-      notificationUrl: `${this.configService.get('NGROK_URL', backendUrl)}/api/pina/payments/webhook?creatorId=${creatorId}`,
+      notificationUrl: this.getWebhookUrl(creatorId),
       marketplaceFee: Number(fee.toFixed(2))
     };
 
@@ -123,6 +121,22 @@ export class PaymentsService {
       console.error('Error creating MP donation preference:', error);
       throw new Error('Error al conectar con MercadoPago');
     }
+  }
+
+  /**
+   * Resuelve la URL de notificación de Mercado Pago.
+   * En producción usa BACKEND_URL directamente (ignora NGROK_URL aunque esté seteado).
+   * En desarrollo permite NGROK_URL para tuneles locales.
+   */
+  getWebhookUrl(creatorId?: string): string {
+    const backendUrl = this.configService.get<string>('BACKEND_URL', 'http://localhost:4000');
+    const isProd = this.configService.get<string>('NODE_ENV') === 'production';
+    const base = isProd
+      ? backendUrl
+      : (this.configService.get<string>('NGROK_URL') || backendUrl);
+
+    const qs = creatorId ? `?creatorId=${creatorId}` : '';
+    return `${base}/api/pina/payments/webhook${qs}`;
   }
 
   validateWebhookSignature(xSignature: string, xRequestId: string, dataID: string): boolean {
