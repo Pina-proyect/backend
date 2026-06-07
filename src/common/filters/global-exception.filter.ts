@@ -66,7 +66,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
   private sanitizeClientMessage(status: number, _message: string): string {
     const genericMessages: Record<number, string> = {
-      [HttpStatus.BAD_REQUEST]: 'Solicitud inválida',
       [HttpStatus.UNAUTHORIZED]: 'No autorizado',
       [HttpStatus.FORBIDDEN]: 'Acceso denegado',
       [HttpStatus.NOT_FOUND]: 'No encontrado',
