@@ -21,16 +21,19 @@ export class PaymentsController {
   async webhook(
     @Query('topic') topic: string,
     @Query('id') id: string,
+    @Query('data.id') dataId: string,
     @Query('creatorId') creatorId: string,
     @Body() body: WebhookPayloadDto,
     @Headers('x-signature') xSignature: string,
     @Headers('x-request-id') xRequestId: string,
   ) {
-    if (!this.paymentsService.validateWebhookSignature(xSignature || '', xRequestId || '')) {
+    const finalDataId = dataId || id || body?.data?.id || '';
+    const finalId = id || body?.data?.id || '';
+
+    if (!this.paymentsService.validateWebhookSignature(xSignature || '', xRequestId || '', finalDataId)) {
       throw new UnauthorizedException('Invalid webhook signature');
     }
 
-    const finalId = id || body?.data?.id || '';
     const finalTopic = topic || body?.type || '';
 
     return this.paymentsService.handleWebhook(finalTopic, finalId, creatorId);

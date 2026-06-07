@@ -125,7 +125,7 @@ export class PaymentsService {
     }
   }
 
-  validateWebhookSignature(xSignature: string, xRequestId: string): boolean {
+  validateWebhookSignature(xSignature: string, xRequestId: string, dataID: string): boolean {
     const secret = this.configService.get<string>('MP_WEBHOOK_SECRET');
     if (!secret) return true; // si no hay secret configurado, no validamos
 
@@ -137,10 +137,10 @@ export class PaymentsService {
       if (key === 'ts') ts = value;
       if (key === 'v1') v1 = value;
     }
-    if (!ts || !v1) return false;
+    if (!ts || !v1 || !dataID) return false;
 
-    const template = `x-request-id:${xRequestId};ts:${ts};`;
-    const computed = crypto.createHmac('sha256', secret).update(template).digest('hex');
+    const manifest = `id:${dataID};request-id:${xRequestId};ts:${ts};`;
+    const computed = crypto.createHmac('sha256', secret).update(manifest).digest('hex');
     return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(v1));
   }
 
