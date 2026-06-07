@@ -41,10 +41,8 @@ export class PaymentsController {
 
   @Get('mercadopago/auth')
   async mercadopagoAuth(@Query('creatorId') creatorId: string, @Res() res: Response) {
-    console.log('[MP OAUTH] HIT mercadopagoAuth v3, creatorId=', creatorId, ', NODE_ENV=', process.env.NODE_ENV);
     try {
       const url = this.paymentsService.getMercadoPagoAuthUrl(creatorId);
-      console.log('[MP OAUTH] Built URL, redirecting to MP');
       return res.redirect(url);
     } catch (error: any) {
       console.error('[MP OAUTH] Error generando URL:', error?.message);
