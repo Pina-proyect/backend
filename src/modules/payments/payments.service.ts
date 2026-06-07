@@ -139,6 +139,14 @@ export class PaymentsService {
     }
     if (!ts || !v1 || !dataID) return false;
 
+    const tsMs = Number(ts) * 1000;
+    if (!Number.isFinite(tsMs)) return false;
+    const skew = Math.abs(Date.now() - tsMs);
+    if (skew > 5 * 60 * 1000) {
+      console.warn(`[WEBHOOK] ts fuera de tolerancia (skew=${skew}ms), rechazando`);
+      return false;
+    }
+
     const manifest = `id:${dataID};request-id:${xRequestId};ts:${ts};`;
     const computed = crypto.createHmac('sha256', secret).update(manifest).digest('hex');
     return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(v1));
