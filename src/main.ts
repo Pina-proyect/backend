@@ -40,6 +40,8 @@ export async function bootstrap() {
 
   app.setGlobalPrefix('api/pina');
 
+  console.log(`[PINA BACKEND] Booting — commit should include v3 OAuth check, sha=${process.env.RENDER_GIT_COMMIT || 'unknown'}, ts=${new Date().toISOString()}`);
+
   await app.listen(process.env.PORT ?? 4000);
 }
 
