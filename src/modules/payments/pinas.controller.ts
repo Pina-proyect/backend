@@ -28,7 +28,7 @@ export class PinasController {
 
     if (!creator.mpAccessToken) {
       throw new BadRequestException(
-        'Esta creadora todavía no conectó su cuenta de Mercado Pago. Pedile que vaya a Settings → Monetización y conecte su cuenta.',
+        'Este creador aún no tiene configurada su cuenta de cobro en Mercado Pago.',
       );
     }
 

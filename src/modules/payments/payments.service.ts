@@ -77,7 +77,21 @@ export class PaymentsService {
   ) {
     const creator = await this.prisma.creator.findUnique({ where: { id: creatorId } });
     if (!creator) throw new Error('Creador no encontrado');
-    if (!creator.mpAccessToken) throw new Error('Este creador no tiene MercadoPago configurado');
+    if (!creator.mpAccessToken) throw new Error('Este creador aún no tiene configurada su cuenta de cobro en Mercado Pago.');
+
+    // Pre-completar datos del donante si está logueado (reduce fricción en checkout MP)
+    let payerEmail = '';
+    let payerName = donorName || '';
+    if (donorId) {
+      const donor = await this.prisma.creator.findUnique({
+        where: { id: donorId },
+        select: { email: true, fullName: true },
+      });
+      if (donor) {
+        payerEmail = donor.email || '';
+        if (!payerName) payerName = donor.fullName || '';
+      }
+    }
 
     // Inicializamos un cliente específico con el token del creador
     const creatorClient = new MercadoPagoConfig({
@@ -101,8 +115,10 @@ export class PaymentsService {
           currency_id: 'ARS'
         }
       ],
-      // MP lo guarda en la preference y lo devuelve al consultar el pago via /v1/payments/{id}
-      // Es la ancla principal del webhook para encontrar la Donation
+      payer: {
+        ...(payerName ? { name: payerName } : {}),
+        ...(payerEmail ? { email: payerEmail } : {}),
+      },
       metadata: {
         donation_id: donationId,
         creator_id: creatorId,
@@ -361,5 +377,54 @@ export class PaymentsService {
       },
     });
     return { success: true };
+  }
+
+  /**
+   * Obtiene el estado de la integración de pagos del creador.
+   * Hace un health check a la API de MP para verificar que el token es válido.
+   * Si el token expiró o fue revocado, limpia las credenciales automáticamente.
+   */
+  async getPaymentSettings(creatorId: string) {
+    const creator = await this.prisma.creator.findUnique({
+      where: { id: creatorId },
+      select: { mpAccessToken: true },
+    });
+
+    if (!creator?.mpAccessToken) {
+      return { isConnected: false, provider: 'mercadopago' };
+    }
+
+    try {
+      const response = await fetch('https://api.mercadopago.com/users/me', {
+        headers: {
+          'Authorization': `Bearer ${creator.mpAccessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.warn(`[MP HEALTH] Token inválido para creator ${creatorId}, status: ${response.status}. Limpiando credenciales.`);
+        await this.disconnectMercadoPago(creatorId);
+        return { isConnected: false, provider: 'mercadopago' };
+      }
+
+      const data = await response.json();
+      const accountName = [data.first_name, data.last_name].filter(Boolean).join(' ').trim() || data.nickname || 'Cuenta Mercado Pago';
+      const accountEmail = data.email || '';
+
+      return {
+        isConnected: true,
+        provider: 'mercadopago',
+        accountName,
+        accountEmail,
+      };
+    } catch (error: any) {
+      console.error('[MP HEALTH] Error verificando token:', error.message);
+      return {
+        isConnected: true,
+        provider: 'mercadopago',
+        accountName: 'Cuenta Mercado Pago',
+        accountEmail: '',
+      };
+    }
   }
 }
