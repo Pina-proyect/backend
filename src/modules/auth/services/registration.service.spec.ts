@@ -46,6 +46,8 @@ describe('RegistrationService', () => {
       findBySlug: jest.fn(),
       update: jest.fn(),
       search: jest.fn(),
+      findByResetToken: jest.fn(),
+      findByVerificationToken: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
