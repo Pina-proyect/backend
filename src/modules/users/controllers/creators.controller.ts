@@ -37,4 +37,11 @@ export class CreatorsController {
     const count = await this.creatorsService.getFollowersCount(creatorId);
     return { count };
   }
+
+  @Get(':id/follow-status')
+  @UseGuards(AuthGuard('jwt'))
+  async getFollowStatus(@Req() req: any, @Param('id') creatorId: string) {
+    const isFollowing = await this.creatorsService.isFollowing(req.user.id, creatorId);
+    return { isFollowing };
+  }
 }

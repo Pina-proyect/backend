@@ -68,6 +68,7 @@ export class RegistrationService {
       photoPath: data.photoPath,
       password: hashedPassword,
       role: data.role,
+      acknowledgedAge: data.acknowledgedAge ?? false,
     });
 
     if (data.role !== 'CONSUMER') {

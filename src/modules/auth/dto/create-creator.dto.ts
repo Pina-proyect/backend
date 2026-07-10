@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsDateString,
   IsEmail,
   IsNotEmpty,
@@ -18,19 +19,22 @@ export class CreateCreatorDto {
   @IsString()
   nationalId?: string;
 
+  @IsNotEmpty({ message: 'La fecha de nacimiento es obligatoria' })
   @IsDateString()
-  birthDate: string; // validación básica
+  birthDate: string;
+
+  @IsOptional()
+  @IsBoolean()
+  acknowledgedAge?: boolean;
 
   @IsOptional()
   @IsString()
-  photoPath?: string; // será una URL a S3
+  photoPath?: string;
 
   @IsOptional()
   @IsString()
-  selfiePath?: string; // será una URL a S3
+  selfiePath?: string;
 
-  // Contraseña opcional para registro convencional.
-  // Si está presente, se hasheará en el servicio antes de persistir.
   @IsOptional()
   @IsString()
   @MinLength(8)

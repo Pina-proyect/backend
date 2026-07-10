@@ -22,7 +22,7 @@ export class CreatorsService {
     const existing = await this.prisma.follow.findUnique({
       where: { followerId_followingId: { followerId, followingId } },
     });
-    if (existing) throw new ConflictException('Ya sigues a este creador');
+    if (existing) return existing;
 
     return this.prisma.follow.create({
       data: { followerId, followingId },

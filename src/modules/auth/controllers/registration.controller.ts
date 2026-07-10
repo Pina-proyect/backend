@@ -11,7 +11,7 @@ export class RegistrationController {
   constructor(private readonly registrationService: RegistrationService) {}
 
   @Post('creadora')
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   async register(
     @Body() data: CreateCreatorDto,
   ): Promise<RegistrationResponse> {
