@@ -144,7 +144,9 @@ export class AuthController {
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 3, ttl: 60000 } })
-  async forgotPassword(@Body('email') email: string): Promise<{ message: string }> {
+  async forgotPassword(
+    @Body('email') email: string,
+  ): Promise<{ message: string }> {
     return this.authService.forgotPassword(email);
   }
 
@@ -166,7 +168,9 @@ export class AuthController {
    */
   @Get('verify-email')
   @HttpCode(HttpStatus.OK)
-  async verifyEmail(@Query('token') token: string): Promise<{ message: string }> {
+  async verifyEmail(
+    @Query('token') token: string,
+  ): Promise<{ message: string }> {
     return this.authService.verifyEmail(token);
   }
 
@@ -176,7 +180,9 @@ export class AuthController {
   @Post('resend-verification')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 3, ttl: 60000 } })
-  async resendVerification(@Body('email') email: string): Promise<{ message: string }> {
+  async resendVerification(
+    @Body('email') email: string,
+  ): Promise<{ message: string }> {
     return this.authService.resendVerificationEmail(email);
   }
 

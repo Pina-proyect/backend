@@ -7,7 +7,12 @@ import { CreatorsController } from './creators.controller';
 import { PrismaService } from 'prisma/prisma.service';
 
 @Module({
-  controllers: [PaymentsController, PinasController, WebhooksController, CreatorsController],
+  controllers: [
+    PaymentsController,
+    PinasController,
+    WebhooksController,
+    CreatorsController,
+  ],
   providers: [PaymentsService, PrismaService],
   exports: [PaymentsService],
 })

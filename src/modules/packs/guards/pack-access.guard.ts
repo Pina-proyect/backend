@@ -16,7 +16,9 @@ export class PackAccessGuard implements CanActivate {
     const user = request.user;
 
     if (!user) {
-      throw new ForbiddenException('Debes iniciar sesión para acceder a este contenido.');
+      throw new ForbiddenException(
+        'Debes iniciar sesión para acceder a este contenido.',
+      );
     }
 
     const packId = request.params.id || request.params.packId;
@@ -47,7 +49,9 @@ export class PackAccessGuard implements CanActivate {
       ) {
         throw error;
       }
-      throw new ForbiddenException('No tienes acceso a este paquete de contenido.');
+      throw new ForbiddenException(
+        'No tienes acceso a este paquete de contenido.',
+      );
     }
   }
 }

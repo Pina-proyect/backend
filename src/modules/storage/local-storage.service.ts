@@ -20,7 +20,9 @@ export class LocalStorageService extends StorageProvider {
       // Retornamos la URL relativa que será servida por el backend
       return `/uploads/${options.filename}`;
     } catch (error) {
-      throw new InternalServerErrorException('Error al guardar archivo localmente');
+      throw new InternalServerErrorException(
+        'Error al guardar archivo localmente',
+      );
     }
   }
 

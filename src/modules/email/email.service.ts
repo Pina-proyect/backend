@@ -15,26 +15,41 @@ export class EmailService {
     } else {
       this.logger.warn('RESEND_API_KEY no configurada — emails no se enviarán');
     }
-    this.from = this.configService.get<string>('EMAIL_FROM') || 'Pina <noreply@pina.com>';
+    this.from =
+      this.configService.get<string>('EMAIL_FROM') || 'Pina <noreply@pina.com>';
   }
 
   async sendVerificationEmail(to: string, token: string): Promise<void> {
     const frontendUrl = this.configService.get<string>('FRONTEND_URL');
     const link = `${frontendUrl}/auth/verify-email?token=${token}`;
 
-    await this.sendEmail(to, 'Verifica tu email en Pina', `Haz clic para verificar tu email: ${link}`);
+    await this.sendEmail(
+      to,
+      'Verifica tu email en Pina',
+      `Haz clic para verificar tu email: ${link}`,
+    );
   }
 
   async sendPasswordResetEmail(to: string, token: string): Promise<void> {
     const frontendUrl = this.configService.get<string>('FRONTEND_URL');
     const link = `${frontendUrl}/auth/reset-password?token=${token}`;
 
-    await this.sendEmail(to, 'Restablece tu contraseña en Pina', `Haz clic para restablecer tu contraseña: ${link}`);
+    await this.sendEmail(
+      to,
+      'Restablece tu contraseña en Pina',
+      `Haz clic para restablecer tu contraseña: ${link}`,
+    );
   }
 
-  private async sendEmail(to: string, subject: string, text: string): Promise<void> {
+  private async sendEmail(
+    to: string,
+    subject: string,
+    text: string,
+  ): Promise<void> {
     if (!this.resend) {
-      this.logger.warn(`[DEV] Email no enviado (sin RESEND_API_KEY). Modo desarrollo — link disponible abajo:`);
+      this.logger.warn(
+        `[DEV] Email no enviado (sin RESEND_API_KEY). Modo desarrollo — link disponible abajo:`,
+      );
       this.logger.warn(`[DEV] Para: ${to}`);
       this.logger.warn(`[DEV] Asunto: ${subject}`);
       const linkMatch = text.match(/https?:\/\/[^\s]+/);

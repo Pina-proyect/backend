@@ -11,13 +11,23 @@ export async function bootstrap() {
 
   const corsOrigins = (process.env.CORS_ORIGINS || '')
     .split(',')
-    .map(s => s.trim())
+    .map((s) => s.trim())
     .filter(Boolean);
-  if (process.env.FRONTEND_URL && !corsOrigins.includes(process.env.FRONTEND_URL)) {
+  if (
+    process.env.FRONTEND_URL &&
+    !corsOrigins.includes(process.env.FRONTEND_URL)
+  ) {
     corsOrigins.push(process.env.FRONTEND_URL);
   }
   app.enableCors({
-    origin: corsOrigins.length > 0 ? corsOrigins : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:4011'],
+    origin:
+      corsOrigins.length > 0
+        ? corsOrigins
+        : [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'http://localhost:4011',
+          ],
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],

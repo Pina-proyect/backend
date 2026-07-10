@@ -13,11 +13,11 @@ describe('AuthService login (bcrypt)', () => {
 
   const repo: MockRepo = {
     findByEmail: jest.fn(),
-  } as any;
+  };
 
   const jwt: MockJwt = {
     sign: jest.fn(),
-  } as any;
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Body,
   UseGuards,
   Req,
@@ -16,6 +18,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { PacksService } from './packs.service';
 import { PackAccessGuard } from './guards/pack-access.guard';
 import { CreatePackDto } from './dto/create-pack.dto';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Controller('packs')
 export class PacksController {
@@ -27,10 +31,7 @@ export class PacksController {
   @Post()
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.CREATED)
-  async createPack(
-    @Req() req: any,
-    @Body() data: CreatePackDto,
-  ) {
+  async createPack(@Req() req: any, @Body() data: CreatePackDto) {
     if (req.user.verificationStatus !== 'verified') {
       throw new ForbiddenException(
         'Debes verificar tu identidad antes de crear un paquete de contenido.',
@@ -59,7 +60,7 @@ export class PacksController {
   @Get(':id')
   async getPack(@Param('id') id: string) {
     const pack = await this.packsService.getPackById(id);
-    
+
     // Ocultar URLs de archivos multimedia privados para no filtrarlos públicamente
     const publicMedia = pack.media.map((item) => ({
       ...item,
@@ -91,5 +92,38 @@ export class PacksController {
       throw new NotFoundException();
     }
     return this.packsService.grantAccess(req.user.id, packId);
+  }
+
+  @Get(':id/comments')
+  async getComments(@Param('id') packId: string) {
+    return this.packsService.getComments(packId);
+  }
+
+  @Post(':id/comments')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.CREATED)
+  async createComment(
+    @Param('id') packId: string,
+    @Body() dto: CreateCommentDto,
+    @Req() req: any,
+  ) {
+    return this.packsService.createComment(packId, req.user.id, dto.content);
+  }
+
+  @Patch('comments/:id')
+  @UseGuards(AuthGuard('jwt'))
+  async updateComment(
+    @Param('id') commentId: string,
+    @Body() dto: UpdateCommentDto,
+    @Req() req: any,
+  ) {
+    return this.packsService.updateComment(commentId, req.user.id, dto.content);
+  }
+
+  @Delete('comments/:id')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteComment(@Param('id') commentId: string, @Req() req: any) {
+    await this.packsService.deleteComment(commentId, req.user.id);
   }
 }

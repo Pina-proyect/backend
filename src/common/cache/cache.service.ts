@@ -6,7 +6,10 @@ import Redis from 'ioredis';
 export class CacheService {
   private readonly logger = new Logger(CacheService.name);
   private readonly client: Redis | null;
-  private readonly fallback = new Map<string, { value: string; expires: number }>();
+  private readonly fallback = new Map<
+    string,
+    { value: string; expires: number }
+  >();
 
   constructor(configService: ConfigService) {
     const url = configService.get<string>('REDIS_URL');
@@ -31,7 +34,7 @@ export class CacheService {
     if (this.client) {
       try {
         const raw = await this.client.get(key);
-        return raw ? JSON.parse(raw) as T : null;
+        return raw ? (JSON.parse(raw) as T) : null;
       } catch {
         return null;
       }
@@ -50,10 +53,16 @@ export class CacheService {
       try {
         await this.client.setex(key, ttlSeconds, serialized);
       } catch {
-        this.fallback.set(key, { value: serialized, expires: Date.now() + ttlSeconds * 1000 });
+        this.fallback.set(key, {
+          value: serialized,
+          expires: Date.now() + ttlSeconds * 1000,
+        });
       }
     } else {
-      this.fallback.set(key, { value: serialized, expires: Date.now() + ttlSeconds * 1000 });
+      this.fallback.set(key, {
+        value: serialized,
+        expires: Date.now() + ttlSeconds * 1000,
+      });
     }
   }
 }

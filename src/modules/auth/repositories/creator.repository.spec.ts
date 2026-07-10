@@ -168,7 +168,7 @@ describe('CreatorRepository', () => {
       const result = await repository.updateVerification('creator-1', {
         verificationStatus: 'verified',
         selfiePath: '/new-selfie.jpg',
-      } as Partial<Creator>);
+      });
 
       expect(prismaMock.creator.update).toHaveBeenCalledWith({
         where: { id: 'creator-1' },

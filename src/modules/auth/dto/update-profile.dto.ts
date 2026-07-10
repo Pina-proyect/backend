@@ -1,11 +1,21 @@
-import { IsOptional, IsString, IsBoolean, IsNumber, Min, Matches, MaxLength, IsNotEmpty } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsBoolean,
+  IsNumber,
+  Min,
+  Matches,
+  MaxLength,
+  IsNotEmpty,
+} from 'class-validator';
 
 export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty({ message: 'El slug no puede estar vacío' })
   @Matches(/^[a-zA-Z0-9-ñÑ]+$/, {
-    message: 'El slug solo puede contener letras, números, guiones y la letra ñ',
+    message:
+      'El slug solo puede contener letras, números, guiones y la letra ñ',
   })
   slug?: string;
 

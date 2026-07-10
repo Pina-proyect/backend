@@ -16,7 +16,6 @@ import { UpdateProfileDto } from '../../auth/dto/update-profile.dto';
 import type { Creator } from '@prisma/client';
 
 @Controller('users')
-
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -26,7 +25,7 @@ export class UsersController {
   async getProfile(@Req() req: any) {
     const userId = req.user.id;
     const creator = await this.usersService.getProfile(userId);
-    
+
     return {
       id: creator.id,
       fullName: creator.fullName,
@@ -50,10 +49,7 @@ export class UsersController {
 
   @Get('search')
   @HttpCode(HttpStatus.OK)
-  async searchCreators(
-    @Query('q') q?: string,
-    @Query('niche') niche?: string
-  ) {
+  async searchCreators(@Query('q') q?: string, @Query('niche') niche?: string) {
     return this.usersService.searchCreators(q, niche);
   }
 
@@ -61,11 +57,11 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async getProfileBySlug(@Param('slug') slug: string) {
     const creator = await this.usersService.getProfileBySlug(slug);
-    
+
     if (!creator) {
       return null;
     }
-    
+
     return {
       id: creator.id,
       fullName: creator.fullName,
@@ -86,7 +82,7 @@ export class UsersController {
       gender: creator.gender,
     };
   }
-  
+
   @UseGuards(AuthGuard('jwt'))
   @Patch('profile')
   @HttpCode(HttpStatus.OK)
@@ -95,8 +91,11 @@ export class UsersController {
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
     const userId = req.user.id;
-    const updatedCreator = await this.usersService.updateProfile(userId, updateProfileDto);
-    
+    const updatedCreator = await this.usersService.updateProfile(
+      userId,
+      updateProfileDto,
+    );
+
     return {
       id: updatedCreator.id,
       fullName: updatedCreator.fullName,

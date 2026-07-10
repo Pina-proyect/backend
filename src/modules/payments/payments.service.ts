@@ -22,7 +22,7 @@ export class PaymentsService {
   async createPreference(packId: string, userId: string) {
     const pack = await this.prisma.contentPack.findUnique({
       where: { id: packId },
-      include: { creator: true }
+      include: { creator: true },
     });
 
     if (!pack) throw new Error('Pack no encontrado');
@@ -38,14 +38,14 @@ export class PaymentsService {
           title: `Pack de Contenido: ${packId}`,
           unit_price: Number(pack.price),
           quantity: 1,
-          currency_id: 'ARS'
-        }
+          currency_id: 'ARS',
+        },
       ],
       externalReference: JSON.stringify({ userId, packId }),
       backUrls: {
         success: `${frontendUrl}/payment-status?status=success`,
         failure: `${frontendUrl}/payment-status?status=failure`,
-        pending: `${frontendUrl}/payment-status?status=pending`
+        pending: `${frontendUrl}/payment-status?status=pending`,
       },
       autoReturn: 'approved',
       notificationUrl: this.getWebhookUrl(),
@@ -58,7 +58,7 @@ export class PaymentsService {
       const response = await preference.create({ body });
       return {
         id: response.id,
-        init_point: response.init_point
+        init_point: response.init_point,
       };
     } catch (error) {
       console.error('Error creating MP preference:', error);
@@ -75,9 +75,14 @@ export class PaymentsService {
     donorId?: string,
     donationId?: string,
   ) {
-    const creator = await this.prisma.creator.findUnique({ where: { id: creatorId } });
+    const creator = await this.prisma.creator.findUnique({
+      where: { id: creatorId },
+    });
     if (!creator) throw new Error('Creador no encontrado');
-    if (!creator.mpAccessToken) throw new Error('Este creador aún no tiene configurada su cuenta de cobro en Mercado Pago.');
+    if (!creator.mpAccessToken)
+      throw new Error(
+        'Este creador aún no tiene configurada su cuenta de cobro en Mercado Pago.',
+      );
 
     // Pre-completar datos del donante si está logueado (reduce fricción en checkout MP)
     let payerEmail = '';
@@ -96,7 +101,7 @@ export class PaymentsService {
     // Inicializamos un cliente específico con el token del creador
     const creatorClient = new MercadoPagoConfig({
       accessToken: creator.mpAccessToken,
-      options: { timeout: 5000 }
+      options: { timeout: 5000 },
     });
     const preference = new Preference(creatorClient);
 
@@ -112,8 +117,8 @@ export class PaymentsService {
           title: `${quantity} Piña(s) para ${creator.fullName}`,
           unit_price: Number(amount),
           quantity: 1,
-          currency_id: 'ARS'
-        }
+          currency_id: 'ARS',
+        },
       ],
       payer: {
         ...(payerName ? { name: payerName } : {}),
@@ -128,7 +133,16 @@ export class PaymentsService {
         ...(donorName ? { donor_name: donorName } : {}),
         ...(donorId ? { donor_id: donorId } : {}),
       },
-      externalReference: JSON.stringify({ type: 'DONATION', donationId, creatorId, quantity, amount, message, donorName, donorId }),
+      externalReference: JSON.stringify({
+        type: 'DONATION',
+        donationId,
+        creatorId,
+        quantity,
+        amount,
+        message,
+        donorName,
+        donorId,
+      }),
       backUrls: {
         success: `${frontendUrl}/pina/payment/success`,
         failure: `${frontendUrl}/pina/payment/failure`,
@@ -136,14 +150,14 @@ export class PaymentsService {
       },
       autoReturn: 'approved',
       notificationUrl: this.getWebhookUrl(creatorId),
-      marketplaceFee: Number(fee.toFixed(2))
+      marketplaceFee: Number(fee.toFixed(2)),
     };
 
     try {
       const response = await preference.create({ body });
       return {
         id: response.id,
-        init_point: response.init_point
+        init_point: response.init_point,
       };
     } catch (error) {
       console.error('Error creating MP donation preference:', error);
@@ -160,20 +174,29 @@ export class PaymentsService {
    * /payments/webhook se mantiene como alias en el controller.
    */
   getWebhookUrl(creatorId?: string): string {
-    const backendUrl = this.configService.get<string>('BACKEND_URL', 'http://localhost:4000');
+    const backendUrl = this.configService.get<string>(
+      'BACKEND_URL',
+      'http://localhost:4000',
+    );
     const isProd = this.configService.get<string>('NODE_ENV') === 'production';
     const base = isProd
       ? backendUrl
-      : (this.configService.get<string>('NGROK_URL') || backendUrl);
+      : this.configService.get<string>('NGROK_URL') || backendUrl;
 
     const qs = creatorId ? `?creatorId=${creatorId}` : '';
     return `${base}/api/pina/webhooks/mercadopago${qs}`;
   }
 
-  validateWebhookSignature(xSignature: string, xRequestId: string, dataID: string): boolean {
+  validateWebhookSignature(
+    xSignature: string,
+    xRequestId: string,
+    dataID: string,
+  ): boolean {
     const secret = this.configService.get<string>('MP_WEBHOOK_SECRET');
     if (!secret) {
-      console.warn('[WEBHOOK] MP_WEBHOOK_SECRET no configurado, rechazando webhook por seguridad');
+      console.warn(
+        '[WEBHOOK] MP_WEBHOOK_SECRET no configurado, rechazando webhook por seguridad',
+      );
       return false;
     }
 
@@ -191,103 +214,119 @@ export class PaymentsService {
     if (!Number.isFinite(tsMs)) return false;
     const skew = Math.abs(Date.now() - tsMs);
     if (skew > 5 * 60 * 1000) {
-      console.warn(`[WEBHOOK] ts fuera de tolerancia (skew=${skew}ms), rechazando`);
+      console.warn(
+        `[WEBHOOK] ts fuera de tolerancia (skew=${skew}ms), rechazando`,
+      );
       return false;
     }
 
     const manifest = `id:${dataID};request-id:${xRequestId};ts:${ts};`;
-    const computed = crypto.createHmac('sha256', secret).update(manifest).digest('hex');
+    const computed = crypto
+      .createHmac('sha256', secret)
+      .update(manifest)
+      .digest('hex');
     return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(v1));
   }
 
   async handleWebhook(topic: string, id: string, creatorId?: string) {
     if (topic === 'payment') {
-       try {
-         // Determine which access token to use
-          let accessToken = this.configService.get<string>('MP_ACCESS_TOKEN', '');
+      try {
+        // Determine which access token to use
+        let accessToken = this.configService.get<string>('MP_ACCESS_TOKEN', '');
 
-         if (creatorId) {
-           const creator = await this.prisma.creator.findUnique({ where: { id: creatorId } });
-           if (creator && creator.mpAccessToken) {
-             accessToken = creator.mpAccessToken;
-           }
-         }
+        if (creatorId) {
+          const creator = await this.prisma.creator.findUnique({
+            where: { id: creatorId },
+          });
+          if (creator && creator.mpAccessToken) {
+            accessToken = creator.mpAccessToken;
+          }
+        }
 
-         const url = `https://api.mercadopago.com/v1/payments/${id}`;
-         const response = await fetch(url, {
-           headers: { 'Authorization': `Bearer ${accessToken}` }
-         });
+        const url = `https://api.mercadopago.com/v1/payments/${id}`;
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
 
-         if (!response.ok) return { received: false, error: 'Payment not found' };
+        if (!response.ok)
+          return { received: false, error: 'Payment not found' };
 
-         const paymentData = await response.json();
-         const paymentIdStr = paymentData.id?.toString();
+        const paymentData = await response.json();
+        const paymentIdStr = paymentData.id?.toString();
 
-         // 1) Determinar el donationId de la preference
-         //    Fuente principal: metadata.donation_id (commit 4)
-         //    Fallback: external_reference.donationId (legacy)
-         const extRef = JSON.parse(paymentData.external_reference || '{}');
-         const donationId: string | undefined =
-           paymentData.metadata?.donation_id ?? extRef.donationId;
+        // 1) Determinar el donationId de la preference
+        //    Fuente principal: metadata.donation_id (commit 4)
+        //    Fallback: external_reference.donationId (legacy)
+        const extRef = JSON.parse(paymentData.external_reference || '{}');
+        const donationId: string | undefined =
+          paymentData.metadata?.donation_id ?? extRef.donationId;
 
-         if (donationId) {
-           // Flujo DONATION: la Donation ya existe en DB (commit 2) con status='pending'
-           const donation = await this.prisma.donation.findUnique({ where: { id: donationId } });
+        if (donationId) {
+          // Flujo DONATION: la Donation ya existe en DB (commit 2) con status='pending'
+          const donation = await this.prisma.donation.findUnique({
+            where: { id: donationId },
+          });
 
-           if (!donation) {
-             console.warn(`[WEBHOOK] donationId=${donationId} not found in DB`);
-             return { received: true };
-           }
+          if (!donation) {
+            console.warn(`[WEBHOOK] donationId=${donationId} not found in DB`);
+            return { received: true };
+          }
 
-           // Idempotencia: si ya está approved, skip
-           if (donation.status === 'approved') {
-             console.log(`[WEBHOOK] donationId=${donationId} already approved, skipping`);
-             return { received: true };
-           }
+          // Idempotencia: si ya está approved, skip
+          if (donation.status === 'approved') {
+            console.log(
+              `[WEBHOOK] donationId=${donationId} already approved, skipping`,
+            );
+            return { received: true };
+          }
 
-           const newStatus =
-             paymentData.status === 'approved' ? 'approved' :
-             paymentData.status === 'rejected' ? 'rejected' :
-             'pending';
+          const newStatus =
+            paymentData.status === 'approved'
+              ? 'approved'
+              : paymentData.status === 'rejected'
+                ? 'rejected'
+                : 'pending';
 
-           await this.prisma.donation.update({
-             where: { id: donationId },
-             data: {
-               status: newStatus,
-               paymentId: paymentIdStr,
-             },
-           });
+          await this.prisma.donation.update({
+            where: { id: donationId },
+            data: {
+              status: newStatus,
+              paymentId: paymentIdStr,
+            },
+          });
 
-           console.log(
-             `[WEBHOOK] donationId=${donationId} status=${newStatus} paymentId=${paymentIdStr}`,
-           );
-           return { received: true };
-         }
+          console.log(
+            `[WEBHOOK] donationId=${donationId} status=${newStatus} paymentId=${paymentIdStr}`,
+          );
+          return { received: true };
+        }
 
-         // 2) Flujo PACK (legacy, sin donationId)
-         if (paymentData.status === 'approved' && extRef.type !== 'DONATION') {
-           const { userId, packId } = extRef;
-           if (userId && packId) {
-             const existingAccess = await this.prisma.access.findFirst({
-               where: { userId, packId }
-             });
+        // 2) Flujo PACK (legacy, sin donationId)
+        if (paymentData.status === 'approved' && extRef.type !== 'DONATION') {
+          const { userId, packId } = extRef;
+          if (userId && packId) {
+            const existingAccess = await this.prisma.access.findFirst({
+              where: { userId, packId },
+            });
 
-             if (!existingAccess) {
-               await this.prisma.access.create({
-                 data: {
-                   userId,
-                   packId,
-                   type: 'PACK'
-                 }
-               });
-               console.log(`[WEBHOOK] Pack ${packId} liberado para usuario ${userId}`);
-             }
-           }
-         }
-       } catch (error: any) {
-         console.error('[WEBHOOK ERROR]', error);
-         return { received: false, error: error.message };
-       }
+            if (!existingAccess) {
+              await this.prisma.access.create({
+                data: {
+                  userId,
+                  packId,
+                  type: 'PACK',
+                },
+              });
+              console.log(
+                `[WEBHOOK] Pack ${packId} liberado para usuario ${userId}`,
+              );
+            }
+          }
+        }
+      } catch (error: any) {
+        console.error('[WEBHOOK ERROR]', error);
+        return { received: false, error: error.message };
+      }
     }
     return { received: true };
   }
@@ -302,11 +341,15 @@ export class PaymentsService {
 
     if (!clientId) {
       console.error('[MP OAUTH] MP_CLIENT_ID no configurado en backend');
-      throw new Error('MP_CLIENT_ID no configurado en el backend. Pedile al admin que lo agregue en Render env vars.');
+      throw new Error(
+        'MP_CLIENT_ID no configurado en el backend. Pedile al admin que lo agregue en Render env vars.',
+      );
     }
     if (!redirectUri) {
       console.error('[MP OAUTH] MP_REDIRECT_URI no configurado en backend');
-      throw new Error('MP_REDIRECT_URI no configurado en el backend. Pedile al admin que lo agregue en Render env vars.');
+      throw new Error(
+        'MP_REDIRECT_URI no configurado en el backend. Pedile al admin que lo agregue en Render env vars.',
+      );
     }
 
     const encodedRedirect = encodeURIComponent(redirectUri);
@@ -316,9 +359,15 @@ export class PaymentsService {
   /**
    * Procesa el callback de OAuth de Mercado Pago
    */
-  async handleMercadoPagoCallback(code: string, creatorId: string): Promise<string> {
+  async handleMercadoPagoCallback(
+    code: string,
+    creatorId: string,
+  ): Promise<string> {
     const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
-    const clientSecret = this.configService.get('MP_CLIENT_SECRET', this.configService.get('MP_ACCESS_TOKEN', ''));
+    const clientSecret = this.configService.get(
+      'MP_CLIENT_SECRET',
+      this.configService.get('MP_ACCESS_TOKEN', ''),
+    );
     const clientId = this.configService.get('MP_CLIENT_ID', '');
     const redirectUri = this.configService.get('MP_REDIRECT_URI', '');
 
@@ -335,14 +384,16 @@ export class PaymentsService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Bearer ${this.configService.get('MP_ACCESS_TOKEN', '')}`,
+          Authorization: `Bearer ${this.configService.get('MP_ACCESS_TOKEN', '')}`,
         },
         body: body.toString(),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`MercadoPago OAuth token error: ${response.status} - ${errorText}`);
+        throw new Error(
+          `MercadoPago OAuth token error: ${response.status} - ${errorText}`,
+        );
       }
 
       const data = await response.json();
@@ -397,18 +448,23 @@ export class PaymentsService {
     try {
       const response = await fetch('https://api.mercadopago.com/users/me', {
         headers: {
-          'Authorization': `Bearer ${creator.mpAccessToken}`,
+          Authorization: `Bearer ${creator.mpAccessToken}`,
         },
       });
 
       if (!response.ok) {
-        console.warn(`[MP HEALTH] Token inválido para creator ${creatorId}, status: ${response.status}. Limpiando credenciales.`);
+        console.warn(
+          `[MP HEALTH] Token inválido para creator ${creatorId}, status: ${response.status}. Limpiando credenciales.`,
+        );
         await this.disconnectMercadoPago(creatorId);
         return { isConnected: false, provider: 'mercadopago' };
       }
 
       const data = await response.json();
-      const accountName = [data.first_name, data.last_name].filter(Boolean).join(' ').trim() || data.nickname || 'Cuenta Mercado Pago';
+      const accountName =
+        [data.first_name, data.last_name].filter(Boolean).join(' ').trim() ||
+        data.nickname ||
+        'Cuenta Mercado Pago';
       const accountEmail = data.email || '';
 
       return {

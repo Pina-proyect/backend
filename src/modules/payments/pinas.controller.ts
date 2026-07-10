@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Get, Param, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { PrismaService } from 'prisma/prisma.service';
 import { DonationPreferenceDto } from '../donations/dto/donation-preference.dto';
@@ -16,14 +24,16 @@ import { DonationPreferenceDto } from '../donations/dto/donation-preference.dto'
 export class PinasController {
   constructor(
     private readonly paymentsService: PaymentsService,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
   ) {}
 
   @Post('payments/pinas')
   async createPaymentPreference(@Body() body: DonationPreferenceDto) {
     const { creatorId, quantity, message, donorName, donorId } = body;
 
-    const creator = await this.prisma.creator.findUnique({ where: { id: creatorId } });
+    const creator = await this.prisma.creator.findUnique({
+      where: { id: creatorId },
+    });
     if (!creator) throw new BadRequestException('Creador no encontrado');
 
     if (!creator.mpAccessToken) {

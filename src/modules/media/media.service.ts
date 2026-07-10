@@ -9,11 +9,15 @@ export class MediaService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async saveMedia(creatorId: string, file: Express.Multer.File, title?: string) {
+  async saveMedia(
+    creatorId: string,
+    file: Express.Multer.File,
+    title?: string,
+  ) {
     try {
       const sanitizedName = file.originalname.replace(/\s+/g, '-');
       const filename = `${Date.now()}-${sanitizedName}`;
-      
+
       // 1. Subir al almacenamiento
       const url = await this.storage.upload(file.buffer, {
         filename,
@@ -32,11 +36,13 @@ export class MediaService {
           type,
           mimetype: file.mimetype,
           size: file.size,
-        }
+        },
       });
     } catch (error) {
       console.error('Error saving media:', error);
-      throw new InternalServerErrorException('Error al procesar el archivo multimedia');
+      throw new InternalServerErrorException(
+        'Error al procesar el archivo multimedia',
+      );
     }
   }
 
@@ -53,7 +59,9 @@ export class MediaService {
     });
 
     if (!media) {
-      throw new InternalServerErrorException('Medio no encontrado o no pertenece al usuario');
+      throw new InternalServerErrorException(
+        'Medio no encontrado o no pertenece al usuario',
+      );
     }
 
     // 1. Borrar de la base de datos

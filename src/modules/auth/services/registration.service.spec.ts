@@ -161,7 +161,8 @@ describe('RegistrationService', () => {
 
       expect(result).toEqual({
         status: 'pending',
-        message: 'Registro completado. Tu cuenta se encuentra en proceso de verificación.',
+        message:
+          'Registro completado. Tu cuenta se encuentra en proceso de verificación.',
         userId: mockCreator.id,
       });
     });

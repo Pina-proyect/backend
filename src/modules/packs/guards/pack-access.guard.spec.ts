@@ -1,4 +1,8 @@
-import { ExecutionContext, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  ExecutionContext,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PackAccessGuard } from './pack-access.guard';
 import { PacksService } from '../packs.service';
@@ -54,7 +58,9 @@ describe('PackAccessGuard', () => {
     const context = createMockExecutionContext(null, { id: 'pack-123' });
 
     await expect(guard.canActivate(context)).rejects.toThrow(
-      new ForbiddenException('Debes iniciar sesión para acceder a este contenido.'),
+      new ForbiddenException(
+        'Debes iniciar sesión para acceder a este contenido.',
+      ),
     );
   });
 

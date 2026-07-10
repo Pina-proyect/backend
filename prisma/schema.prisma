@@ -63,6 +63,8 @@ model Creator {
   pinaPrice                Float     @default(1000)
   donationGoalTitle        String?   @db.VarChar(100)
   donationGoalAmount       Float?
+  // Age Gate: confirmación de mayoría de edad
+  acknowledgedAge          Boolean   @default(false)
 
   // Relación con el contenido multimedia
   media             Media[]
@@ -72,6 +74,14 @@ model Creator {
   donationsReceived Donation[]    @relation("CreatorDonations")
   // Relación con las donaciones realizadas (si el usuario está registrado)
   donationsMade     Donation[]    @relation("DonorDonations")
+  // Usuarios que siguen a este creador
+  followers         Follow[]      @relation("Following")
+  // Usuarios a los que este creador sigue
+  following         Follow[]      @relation("Follower")
+  // Notificaciones del creador
+  notifications     Notification[]
+  // Comentarios del creador
+  comments          Comment[]
 
   createdAt DateTime @default(now())
   // Marca de actualización automática
@@ -135,6 +145,7 @@ model ContentPack {
 
   media    Media[]  @relation("PackMedia")
   accesses Access[]
+  comments Comment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -161,6 +172,40 @@ model Media {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  creatorId String
+  creator   Creator  @relation(fields: [creatorId], references: [id])
+  type      String   // follow, donation, comment, system
+  title     String   @db.VarChar(200)
+  message   String?  @db.VarChar(500)
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  follower    Creator  @relation("Follower", fields: [followerId], references: [id])
+  followingId String
+  following   Creator  @relation("Following", fields: [followingId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+model Comment {
+  id        String      @id @default(uuid())
+  content   String      @db.VarChar(1000)
+  creatorId String
+  creator   Creator     @relation(fields: [creatorId], references: [id])
+  packId    String
+  pack      ContentPack @relation(fields: [packId], references: [id])
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
 
 model Access {

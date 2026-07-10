@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CacheService } from '../../common/cache/cache.service';
 
@@ -9,13 +13,16 @@ export class PacksService {
     private readonly cache: CacheService,
   ) {}
 
-  async createPack(creatorId: string, data: {
-    title: string;
-    description?: string;
-    price: number;
-    categoryId: string;
-    mediaIds: string[];
-  }) {
+  async createPack(
+    creatorId: string,
+    data: {
+      title: string;
+      description?: string;
+      price: number;
+      categoryId: string;
+      mediaIds: string[];
+    },
+  ) {
     // Verificar que todos los medios pertenecen al creador
     const mediaCount = await this.prisma.media.count({
       where: {
@@ -25,7 +32,9 @@ export class PacksService {
     });
 
     if (mediaCount !== data.mediaIds.length) {
-      throw new ForbiddenException('Algunos archivos no pertenecen a tu cuenta o no existen');
+      throw new ForbiddenException(
+        'Algunos archivos no pertenecen a tu cuenta o no existen',
+      );
     }
 
     return this.prisma.contentPack.create({
@@ -67,8 +76,8 @@ export class PacksService {
           select: {
             fullName: true,
             slug: true,
-          }
-        }
+          },
+        },
       },
     });
 
@@ -85,7 +94,7 @@ export class PacksService {
       include: {
         media: true,
         category: true,
-      }
+      },
     });
   }
 
@@ -143,5 +152,68 @@ export class PacksService {
         type,
       },
     });
+  }
+
+  async getComments(packId: string) {
+    const pack = await this.prisma.contentPack.findUnique({
+      where: { id: packId },
+    });
+    if (!pack) throw new NotFoundException('Pack no encontrado');
+
+    return this.prisma.comment.findMany({
+      where: { packId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        creator: {
+          select: { id: true, fullName: true, slug: true, photoPath: true },
+        },
+      },
+    });
+  }
+
+  async createComment(packId: string, creatorId: string, content: string) {
+    const pack = await this.prisma.contentPack.findUnique({
+      where: { id: packId },
+    });
+    if (!pack) throw new NotFoundException('Pack no encontrado');
+
+    return this.prisma.comment.create({
+      data: { content, packId, creatorId },
+      include: {
+        creator: {
+          select: { id: true, fullName: true, slug: true, photoPath: true },
+        },
+      },
+    });
+  }
+
+  async updateComment(commentId: string, creatorId: string, content: string) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+    if (!comment) throw new NotFoundException('Comentario no encontrado');
+    if (comment.creatorId !== creatorId)
+      throw new ForbiddenException('No puedes editar este comentario');
+
+    return this.prisma.comment.update({
+      where: { id: commentId },
+      data: { content },
+      include: {
+        creator: {
+          select: { id: true, fullName: true, slug: true, photoPath: true },
+        },
+      },
+    });
+  }
+
+  async deleteComment(commentId: string, creatorId: string) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+    if (!comment) throw new NotFoundException('Comentario no encontrado');
+    if (comment.creatorId !== creatorId)
+      throw new ForbiddenException('No puedes eliminar este comentario');
+
+    await this.prisma.comment.delete({ where: { id: commentId } });
   }
 }

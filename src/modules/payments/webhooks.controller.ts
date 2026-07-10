@@ -1,4 +1,11 @@
-import { Controller, Post, Query, Body, Headers, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Query,
+  Body,
+  Headers,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { PaymentsService } from './payments.service';
 import { WebhookPayloadDto } from './dto/webhook-payload.dto';
@@ -28,7 +35,13 @@ export class WebhooksController {
     const finalDataId = dataId || id || body?.data?.id || '';
     const finalId = id || body?.data?.id || '';
 
-    if (!this.paymentsService.validateWebhookSignature(xSignature || '', xRequestId || '', finalDataId)) {
+    if (
+      !this.paymentsService.validateWebhookSignature(
+        xSignature || '',
+        xRequestId || '',
+        finalDataId,
+      )
+    ) {
       throw new UnauthorizedException('Invalid webhook signature');
     }
 

@@ -57,7 +57,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     response.status(status).json({
       statusCode: status,
-      message: isProduction && status >= 500 ? 'Internal server error' : message,
+      message:
+        isProduction && status >= 500 ? 'Internal server error' : message,
       ...(code && { code }),
       timestamp: new Date().toISOString(),
       path: request.url,

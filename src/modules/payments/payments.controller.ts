@@ -1,4 +1,15 @@
-import { Controller, Post, Body, Req, UseGuards, Query, Get, Res, Headers, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Req,
+  UseGuards,
+  Query,
+  Get,
+  Res,
+  Headers,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { PaymentsService } from './payments.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -30,7 +41,13 @@ export class PaymentsController {
     const finalDataId = dataId || id || body?.data?.id || '';
     const finalId = id || body?.data?.id || '';
 
-    if (!this.paymentsService.validateWebhookSignature(xSignature || '', xRequestId || '', finalDataId)) {
+    if (
+      !this.paymentsService.validateWebhookSignature(
+        xSignature || '',
+        xRequestId || '',
+        finalDataId,
+      )
+    ) {
       throw new UnauthorizedException('Invalid webhook signature');
     }
 
@@ -40,15 +57,21 @@ export class PaymentsController {
   }
 
   @Get('mercadopago/auth')
-  async mercadopagoAuth(@Query('creatorId') creatorId: string, @Res() res: Response) {
+  async mercadopagoAuth(
+    @Query('creatorId') creatorId: string,
+    @Res() res: Response,
+  ) {
     try {
       const url = this.paymentsService.getMercadoPagoAuthUrl(creatorId);
       return res.redirect(url);
     } catch (error: any) {
       console.error('[MP OAUTH] Error generando URL:', error?.message);
-      const frontendUrl = process.env.FRONTEND_URL || 'https://pina-delta.vercel.app';
+      const frontendUrl =
+        process.env.FRONTEND_URL || 'https://pina-delta.vercel.app';
       const msg = encodeURIComponent(error?.message || 'oauth_config_missing');
-      return res.redirect(`${frontendUrl}/settings?tab=monetization&connected=error&message=${msg}`);
+      return res.redirect(
+        `${frontendUrl}/settings?tab=monetization&connected=error&message=${msg}`,
+      );
     }
   }
 
@@ -56,9 +79,12 @@ export class PaymentsController {
   async mercadopagoCallback(
     @Query('code') code: string,
     @Query('state') state: string,
-    @Res() res: Response
+    @Res() res: Response,
   ) {
-    const redirectUrl = await this.paymentsService.handleMercadoPagoCallback(code, state);
+    const redirectUrl = await this.paymentsService.handleMercadoPagoCallback(
+      code,
+      state,
+    );
     return res.redirect(redirectUrl);
   }
 

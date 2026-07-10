@@ -1,4 +1,11 @@
-import { Injectable, UnauthorizedException, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  Logger,
+} from '@nestjs/common';
 import { Creator } from '@prisma/client';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -127,7 +134,16 @@ export class AuthService {
     }
 
     const tokens = this.generateTokens(user);
-    const { password, resetToken, resetTokenExpires, verificationToken, verificationTokenExpires, mpRefreshToken, nationalId, ...safeUser } = user;
+    const {
+      password,
+      resetToken,
+      resetTokenExpires,
+      verificationToken,
+      verificationTokenExpires,
+      mpRefreshToken,
+      nationalId,
+      ...safeUser
+    } = user;
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
@@ -150,7 +166,16 @@ export class AuthService {
         throw new UnauthorizedException('Refresh token inválido');
       }
       const tokens = this.generateTokens(user);
-      const { password, resetToken, resetTokenExpires, verificationToken, verificationTokenExpires, mpRefreshToken, nationalId, ...safeUser } = user;
+      const {
+        password,
+        resetToken,
+        resetTokenExpires,
+        verificationToken,
+        verificationTokenExpires,
+        mpRefreshToken,
+        nationalId,
+        ...safeUser
+      } = user;
       return {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
@@ -180,7 +205,9 @@ export class AuthService {
   async resendVerificationEmail(email: string): Promise<{ message: string }> {
     const creator = await this.creatorRepository.findByEmail(email);
     if (!creator || creator.emailVerified) {
-      return { message: 'Si el email existe, recibirás un enlace de verificación.' };
+      return {
+        message: 'Si el email existe, recibirás un enlace de verificación.',
+      };
     }
 
     const verificationToken = randomBytes(32).toString('hex');
@@ -189,17 +216,25 @@ export class AuthService {
     await this.creatorRepository.update(creator.id, {
       verificationToken,
       verificationTokenExpires,
-    } as any);
+    });
 
-    await this.emailService.sendVerificationEmail(creator.email, verificationToken);
+    await this.emailService.sendVerificationEmail(
+      creator.email,
+      verificationToken,
+    );
 
-    return { message: 'Si el email existe, recibirás un enlace de verificación.' };
+    return {
+      message: 'Si el email existe, recibirás un enlace de verificación.',
+    };
   }
 
   async forgotPassword(email: string): Promise<{ message: string }> {
     const creator = await this.creatorRepository.findByEmail(email);
     if (!creator) {
-      return { message: 'Si el email existe, recibirás un enlace para restablecer tu contraseña.' };
+      return {
+        message:
+          'Si el email existe, recibirás un enlace para restablecer tu contraseña.',
+      };
     }
 
     const resetToken = randomBytes(32).toString('hex');
@@ -208,14 +243,20 @@ export class AuthService {
     await this.creatorRepository.update(creator.id, {
       resetToken,
       resetTokenExpires,
-    } as any);
+    });
 
     await this.emailService.sendPasswordResetEmail(creator.email, resetToken);
 
-    return { message: 'Si el email existe, recibirás un enlace para restablecer tu contraseña.' };
+    return {
+      message:
+        'Si el email existe, recibirás un enlace para restablecer tu contraseña.',
+    };
   }
 
-  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+  async resetPassword(
+    token: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
     const creator = await this.creatorRepository.findByResetToken(token);
     if (!creator) {
       throw new BadRequestException('Token de restablecimiento inválido');
@@ -234,7 +275,7 @@ export class AuthService {
       resetToken: null,
       resetTokenExpires: null,
       tokenVersion: { increment: 1 },
-    } as any);
+    });
 
     return { message: 'Contraseña restablecida correctamente.' };
   }
@@ -245,7 +286,10 @@ export class AuthService {
       throw new BadRequestException('Token de verificación inválido');
     }
 
-    if (creator.verificationTokenExpires && creator.verificationTokenExpires < new Date()) {
+    if (
+      creator.verificationTokenExpires &&
+      creator.verificationTokenExpires < new Date()
+    ) {
       throw new BadRequestException('Token de verificación expirado');
     }
 
@@ -253,7 +297,7 @@ export class AuthService {
       emailVerified: true,
       verificationToken: null,
       verificationTokenExpires: null,
-    } as any);
+    });
 
     return { message: 'Email verificado correctamente' };
   }
@@ -262,7 +306,10 @@ export class AuthService {
    * updateProfile
    * Actualiza el perfil del usuario autenticado (slug, bio, etc.)
    */
-  async updateProfile(userId: string, updateData: UpdateProfileDto): Promise<Creator> {
+  async updateProfile(
+    userId: string,
+    updateData: UpdateProfileDto,
+  ): Promise<Creator> {
     // Verificar que el usuario existe
     const existingUser = await this.creatorRepository.findById(userId);
     if (!existingUser) {
@@ -271,7 +318,9 @@ export class AuthService {
 
     // Si se está actualizando el slug, verificar que no esté en uso
     if (updateData.slug) {
-      const userWithSameSlug = await this.creatorRepository.findBySlug(updateData.slug);
+      const userWithSameSlug = await this.creatorRepository.findBySlug(
+        updateData.slug,
+      );
       if (userWithSameSlug && userWithSameSlug.id !== userId) {
         throw new UnauthorizedException('El slug ya está en uso');
       }
