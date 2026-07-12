@@ -107,9 +107,6 @@ export class PaymentsService {
 
     const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
 
-    // Fee del 7% para Pina (Marketplace Fee)
-    const fee = amount * 0.07;
-
     const body = {
       items: [
         {
@@ -150,7 +147,8 @@ export class PaymentsService {
       },
       autoReturn: 'approved',
       notificationUrl: this.getWebhookUrl(creatorId),
-      marketplaceFee: Number(fee.toFixed(2)),
+      // marketplaceFee deshabilitado — activar cuando MP apruebe cuentas productivas (7%)
+      // marketplaceFee: Number((amount * 0.07).toFixed(2)),
     };
 
     try {
