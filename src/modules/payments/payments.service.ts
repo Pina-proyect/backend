@@ -225,6 +225,12 @@ export class PaymentsService {
       .createHmac('sha256', secret)
       .update(manifest)
       .digest('hex');
+    if (computed.length !== v1.length) {
+      console.warn(
+        `[WEBHOOK] Length mismatch: computed=${computed.length} vs v1=${v1.length}, rechazando`,
+      );
+      return false;
+    }
     return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(v1));
   }
 
@@ -364,10 +370,13 @@ export class PaymentsService {
     creatorId: string,
   ): Promise<string> {
     const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
-    const clientSecret = this.configService.get(
-      'MP_CLIENT_SECRET',
-      this.configService.get('MP_ACCESS_TOKEN', ''),
-    );
+    const clientSecret =
+      this.configService.get<string>('MP_CLIENT_SECRET');
+    if (!clientSecret) {
+      throw new Error(
+        'MP_CLIENT_SECRET no configurado en el backend. Pedile al admin que lo agregue en Render env vars.',
+      );
+    }
     const clientId = this.configService.get('MP_CLIENT_ID', '');
     const redirectUri = this.configService.get('MP_REDIRECT_URI', '');
 
@@ -476,7 +485,7 @@ export class PaymentsService {
     } catch (error: any) {
       console.error('[MP HEALTH] Error verificando token:', error.message);
       return {
-        isConnected: true,
+        isConnected: false,
         provider: 'mercadopago',
         accountName: 'Cuenta Mercado Pago',
         accountEmail: '',

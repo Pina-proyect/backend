@@ -39,7 +39,7 @@ export class PaymentsController {
     @Headers('x-request-id') xRequestId: string,
   ) {
     const finalDataId = dataId || id || body?.data?.id || '';
-    const finalId = id || body?.data?.id || '';
+    const finalId = dataId || id || body?.data?.id || '';
 
     if (
       !this.paymentsService.validateWebhookSignature(
