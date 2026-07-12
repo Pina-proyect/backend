@@ -147,8 +147,7 @@ export class PaymentsService {
       },
       autoReturn: 'approved',
       notificationUrl: this.getWebhookUrl(creatorId),
-      // marketplaceFee deshabilitado — activar cuando MP apruebe cuentas productivas (7%)
-      // marketplaceFee: Number((amount * 0.07).toFixed(2)),
+      marketplaceFee: Number((amount * 0.07).toFixed(2)),
     };
 
     try {
