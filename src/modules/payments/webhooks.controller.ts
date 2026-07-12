@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   Query,
   Body,
   Headers,
@@ -20,6 +21,11 @@ import { WebhookPayloadDto } from './dto/webhook-payload.dto';
 @Controller('webhooks/mercadopago')
 export class WebhooksController {
   constructor(private readonly paymentsService: PaymentsService) {}
+
+  @Get()
+  healthCheck() {
+    return { status: 'ok' };
+  }
 
   @Post()
   @Throttle({ default: { limit: 30, ttl: 60000 } })
