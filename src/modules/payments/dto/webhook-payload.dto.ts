@@ -1,4 +1,10 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+
+class WebhookDataDto {
+  @IsOptional()
+  id?: any;
+}
 
 export class WebhookPayloadDto {
   @IsOptional()
@@ -10,17 +16,16 @@ export class WebhookPayloadDto {
   api_version?: string;
 
   @IsOptional()
-  data?: {
-    id?: string;
-  };
+  @ValidateNested()
+  @Type(() => WebhookDataDto)
+  data?: WebhookDataDto;
 
   @IsOptional()
   @IsString()
   date_created?: string;
 
   @IsOptional()
-  @IsString()
-  id?: string;
+  id?: any;
 
   @IsOptional()
   live_mode?: any;
