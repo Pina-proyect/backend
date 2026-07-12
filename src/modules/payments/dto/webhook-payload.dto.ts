@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsBoolean, IsNumber } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class WebhookPayloadDto {
   @IsOptional()
@@ -23,14 +23,12 @@ export class WebhookPayloadDto {
   id?: string;
 
   @IsOptional()
-  @IsBoolean()
-  live_mode?: boolean;
+  live_mode?: any;
 
   @IsOptional()
   @IsString()
   type?: string;
 
   @IsOptional()
-  @IsNumber()
-  user_id?: number;
+  user_id?: any;
 }
