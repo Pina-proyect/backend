@@ -171,14 +171,26 @@ export class PaymentsService {
    * /payments/webhook se mantiene como alias en el controller.
    */
   getWebhookUrl(creatorId?: string): string {
-    const backendUrl = this.configService.get<string>(
-      'BACKEND_URL',
-      'http://localhost:4000',
-    );
     const isProd = this.configService.get<string>('NODE_ENV') === 'production';
-    const base = isProd
-      ? backendUrl
-      : this.configService.get<string>('NGROK_URL') || backendUrl;
+    const backendUrl = this.configService.get<string>('BACKEND_URL', '');
+
+    let base: string;
+    if (isProd) {
+      base =
+        backendUrl ||
+        this.configService.get<string>('RENDER_EXTERNAL_URL', '');
+      if (!base) {
+        console.warn(
+          '[MP] BACKEND_URL no configurado. MP no puede enviar webhooks. Agregalo en Render env vars.',
+        );
+        base = 'https://pina-backend-bii9.onrender.com';
+      }
+    } else {
+      base =
+        this.configService.get<string>('NGROK_URL') ||
+        backendUrl ||
+        'http://localhost:4011';
+    }
 
     const qs = creatorId ? `?creatorId=${creatorId}` : '';
     return `${base}/api/pina/webhooks/mercadopago${qs}`;
