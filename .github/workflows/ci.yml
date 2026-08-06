@@ -6,7 +6,7 @@ name: CI
 
 on:
   push:
-    branches: [ "master", "main" ]
+    branches: [ "master", "main", "testing" ]
   pull_request:
     branches: [ "master", "main" ]
 
@@ -45,13 +45,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2) Configurar Node y Yarn (Berry)
-      - name: Configurar Node y Yarn
+      # 2) Configurar Node
+      - name: Configurar Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'yarn'
-          cache-dependency-path: 'backend-nest/yarn.lock'
 
       - name: Habilitar Corepack
         run: corepack enable
@@ -62,11 +60,23 @@ jobs:
       - name: Verificar versión de Yarn
         run: yarn -v
 
-      # 3) Instalar dependencias con Yarn Berry de forma reproducible
+      # 3) Cache explícito para Yarn Berry (.yarn/cache)
+      - name: Cache Yarn Berry
+        uses: actions/cache@v4
+        with:
+          path: |
+            backend-nest/node_modules
+            backend-nest/.yarn/cache
+            backend-nest/.yarn/install-state.gz
+          key: ${{ runner.os }}-backend-yarn-${{ hashFiles('backend-nest/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-backend-yarn-
+
+      # 4) Instalar dependencias con Yarn Berry de forma reproducible
       - name: Instalar dependencias
         run: yarn install --immutable
 
-      # 4) Esperar que Postgres esté listo
+      # 5) Esperar que Postgres esté listo
       - name: Esperar Postgres
         run: |
           until pg_isready -h localhost -p 5432 -U postgres; do
@@ -74,19 +84,19 @@ jobs:
             sleep 2
           done
 
-      # 5) Generar Prisma Client
+      # 6) Generar Prisma Client
       - name: Generar Prisma Client
         run: yarn prisma generate
 
-      # 6) Aplicar migraciones a la base de pruebas
+      # 7) Aplicar migraciones a la base de pruebas
       - name: Aplicar migraciones
         run: yarn prisma migrate deploy
 
-      # 7) Ejecutar tests unitarios
+      # 8) Ejecutar tests unitarios
       - name: Ejecutar tests unitarios
         run: yarn test --ci
 
-      # 8) Ejecutar tests end-to-end
+      # 9) Ejecutar tests end-to-end
       - name: Ejecutar tests e2e
         run: yarn test:e2e --ci
 
@@ -102,22 +112,32 @@ jobs:
           fetch-depth: 0
 
       - name: Secret scanning (trufflehog)
-        uses: trufflehog/trufflehog-actions-scan@main
+        uses: trufflesecurity/trufflehog@main
         with:
-          scanArguments: "--results=verified --fail --no-verification"
+          path: backend-nest
+          extra_args: --fail --no-verification
 
-      - name: Configurar Node y Yarn
+      - name: Configurar Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'yarn'
-          cache-dependency-path: 'backend-nest/yarn.lock'
 
       - name: Habilitar Corepack
         run: corepack enable
 
       - name: Activar Yarn 4.11.0 con Corepack
         run: corepack prepare yarn@4.11.0 --activate
+
+      - name: Cache Yarn Berry
+        uses: actions/cache@v4
+        with:
+          path: |
+            backend-nest/node_modules
+            backend-nest/.yarn/cache
+            backend-nest/.yarn/install-state.gz
+          key: ${{ runner.os }}-backend-yarn-${{ hashFiles('backend-nest/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-backend-yarn-
 
       - name: Instalar dependencias
         run: yarn install --immutable
