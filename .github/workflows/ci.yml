@@ -50,30 +50,21 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Habilitar Corepack
-        run: corepack enable
+      # El repo usa Yarn Classic (lockfile v1). El runner ya trae yarn 1.22.x,
+      # por eso no activamos Corepack/Berry aquí.
 
-      - name: Activar Yarn 4.11.0 con Corepack
-        run: corepack prepare yarn@4.11.0 --activate
-
-      - name: Verificar versión de Yarn
-        run: yarn -v
-
-      # 3) Cache explícito para Yarn Berry (.yarn/cache)
-      - name: Cache Yarn Berry
+      # 3) Cache de node_modules
+      - name: Cache node_modules
         uses: actions/cache@v4
         with:
-          path: |
-            node_modules
-            .yarn/cache
-            .yarn/install-state.gz
+          path: node_modules
           key: ${{ runner.os }}-backend-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-backend-yarn-
 
-      # 4) Instalar dependencias con Yarn Berry de forma reproducible
+      # 4) Instalar dependencias de forma reproducible
       - name: Instalar dependencias
-        run: yarn install --immutable
+        run: yarn install --frozen-lockfile
 
       # 5) Esperar que Postgres esté listo
       - name: Esperar Postgres
@@ -110,32 +101,26 @@ jobs:
       - name: Secret scanning (trufflehog)
         uses: trufflesecurity/trufflehog@main
         with:
-          extra_args: --fail --no-verification
+          # La acción ya agrega --fail --no-update --github-actions por defecto.
+          extra_args: --no-verification
 
       - name: Configurar Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Habilitar Corepack
-        run: corepack enable
+      # El repo usa Yarn Classic (lockfile v1); el runner ya trae yarn 1.22.x.
 
-      - name: Activar Yarn 4.11.0 con Corepack
-        run: corepack prepare yarn@4.11.0 --activate
-
-      - name: Cache Yarn Berry
+      - name: Cache node_modules
         uses: actions/cache@v4
         with:
-          path: |
-            node_modules
-            .yarn/cache
-            .yarn/install-state.gz
+          path: node_modules
           key: ${{ runner.os }}-backend-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-backend-yarn-
 
       - name: Instalar dependencias
-        run: yarn install --immutable
+        run: yarn install --frozen-lockfile
 
       - name: Dependency audit
         run: yarn npm audit --all --severity high
