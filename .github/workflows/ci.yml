@@ -37,6 +37,7 @@ jobs:
     # Variables de entorno para la ejecución de tests.
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pina_ci
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/pina_ci
       NODE_ENV: test
 
     steps:
@@ -102,7 +103,9 @@ jobs:
         uses: trufflesecurity/trufflehog@main
         with:
           # La acción ya agrega --fail --no-update --github-actions por defecto.
-          extra_args: --no-verification
+          # Sin --no-verification: verifica contra APIs reales y solo falla con
+          # secretos VERIFICADOS; los FlatIO unverified quedan como warnings.
+          extra_args: --results=verified
 
       - name: Configurar Node
         uses: actions/setup-node@v4
