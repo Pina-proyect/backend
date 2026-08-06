@@ -15,10 +15,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    # Ejecuta todos los comandos dentro de la carpeta del proyecto
-    defaults:
-      run:
-        working-directory: backend-nest
+    # El repo de GitHub tiene el código en la raíz (package.json, src/, prisma/).
+    # Sin working-directory: los comandos corren en la raíz del checkout.
 
     # Servicio de Postgres para tests. Evita depender de bases locales.
     services:
@@ -66,10 +64,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            backend-nest/node_modules
-            backend-nest/.yarn/cache
-            backend-nest/.yarn/install-state.gz
-          key: ${{ runner.os }}-backend-yarn-${{ hashFiles('backend-nest/yarn.lock') }}
+            node_modules
+            .yarn/cache
+            .yarn/install-state.gz
+          key: ${{ runner.os }}-backend-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-backend-yarn-
 
@@ -103,9 +101,6 @@ jobs:
 
   security:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend-nest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -115,7 +110,6 @@ jobs:
       - name: Secret scanning (trufflehog)
         uses: trufflesecurity/trufflehog@main
         with:
-          path: backend-nest
           extra_args: --fail --no-verification
 
       - name: Configurar Node
@@ -133,10 +127,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            backend-nest/node_modules
-            backend-nest/.yarn/cache
-            backend-nest/.yarn/install-state.gz
-          key: ${{ runner.os }}-backend-yarn-${{ hashFiles('backend-nest/yarn.lock') }}
+            node_modules
+            .yarn/cache
+            .yarn/install-state.gz
+          key: ${{ runner.os }}-backend-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-backend-yarn-
 
