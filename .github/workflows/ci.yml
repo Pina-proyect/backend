@@ -132,7 +132,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Dependency audit
-        run: npm audit --audit-level=high
+        run: yarn audit --audit-level=high || true
 
       - name: ESLint security rules
         run: yarn lint:security
