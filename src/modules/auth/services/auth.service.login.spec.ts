@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { CreatorRepository } from '../repositories/creator.repository';
 import { JwtService } from '@nestjs/jwt';
+import { EmailService } from '../../email/email.service';
 import type { Creator } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
@@ -19,12 +20,19 @@ describe('AuthService login (bcrypt)', () => {
     sign: jest.fn(),
   };
 
+  const emailService = {
+    sendVerificationEmail: jest.fn(),
+    sendPasswordResetEmail: jest.fn(),
+    sendWelcomeEmail: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: CreatorRepository, useValue: repo },
         { provide: JwtService, useValue: jwt },
+        { provide: EmailService, useValue: emailService },
       ],
     }).compile();
 
@@ -77,6 +85,7 @@ describe('AuthService login (bcrypt)', () => {
       nationalId: null,
       phone: null,
       verificationStatus: 'pending',
+      emailVerified: true,
       selfiePath: null,
       photoPath: null,
       createdAt: new Date(),
@@ -90,7 +99,9 @@ describe('AuthService login (bcrypt)', () => {
     });
 
     const resp = await service.login({ email: 'a@b.com', password: plain });
-    expect(resp).toEqual({ accessToken: 'ACCESS', refreshToken: 'REFRESH' });
+    expect(resp.accessToken).toBe('ACCESS');
+    expect(resp.refreshToken).toBe('REFRESH');
+    expect(resp.user).toMatchObject({ id: 'u1', email: 'a@b.com', fullName: 'A B' });
   });
 
   it('debería lanzar Unauthorized si bcrypt.compare no coincide', async () => {

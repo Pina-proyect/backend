@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PacksService } from './packs.service';
 import { PrismaService } from 'prisma/prisma.service';
+import { CacheService } from '../../common/cache/cache.service';
 
 describe('PacksService', () => {
   let service: PacksService;
@@ -28,6 +29,14 @@ describe('PacksService', () => {
               findUnique: jest.fn(),
               create: jest.fn(),
             },
+          },
+        },
+        {
+          provide: CacheService,
+          useValue: {
+            get: jest.fn(),
+            set: jest.fn(),
+            del: jest.fn(),
           },
         },
       ],
