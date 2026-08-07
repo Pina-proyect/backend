@@ -39,6 +39,12 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pina_ci
       DIRECT_URL: postgresql://postgres:postgres@localhost:5432/pina_ci
       NODE_ENV: test
+      # Variables requeridas por ConfigModule.forRoot al levantar AppModule.
+      JWT_SECRET: ci-test-secret
+      GOOGLE_CLIENT_ID: ci-test
+      GOOGLE_CLIENT_SECRET: ci-test
+      GOOGLE_CALLBACK_URL: http://localhost:3000/api/pina/auth/google/callback
+      FRONTEND_URL: http://localhost:3000
 
     steps:
       # 1) Checkout del código
@@ -126,7 +132,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Dependency audit
-        run: yarn npm audit --all --severity high
+        run: npm audit --audit-level=high
 
       - name: ESLint security rules
         run: yarn lint:security
