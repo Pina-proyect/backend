@@ -209,8 +209,7 @@ export class PaymentsService {
     let base: string;
     if (isProd) {
       base =
-        backendUrl ||
-        this.configService.get<string>('RENDER_EXTERNAL_URL', '');
+        backendUrl || this.configService.get<string>('RENDER_EXTERNAL_URL', '');
       if (!base) {
         console.warn(
           '[MP] BACKEND_URL no configurado. MP no puede enviar webhooks. Agregalo en Render env vars.',
@@ -416,8 +415,7 @@ export class PaymentsService {
     creatorId: string,
   ): Promise<string> {
     const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
-    const clientSecret =
-      this.configService.get<string>('MP_CLIENT_SECRET');
+    const clientSecret = this.configService.get<string>('MP_CLIENT_SECRET');
     if (!clientSecret) {
       throw new Error(
         'MP_CLIENT_SECRET no configurado en el backend. Pedile al admin que lo agregue en Render env vars.',

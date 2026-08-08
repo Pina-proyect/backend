@@ -101,7 +101,11 @@ describe('AuthService login (bcrypt)', () => {
     const resp = await service.login({ email: 'a@b.com', password: plain });
     expect(resp.accessToken).toBe('ACCESS');
     expect(resp.refreshToken).toBe('REFRESH');
-    expect(resp.user).toMatchObject({ id: 'u1', email: 'a@b.com', fullName: 'A B' });
+    expect(resp.user).toMatchObject({
+      id: 'u1',
+      email: 'a@b.com',
+      fullName: 'A B',
+    });
   });
 
   it('debería lanzar Unauthorized si bcrypt.compare no coincide', async () => {

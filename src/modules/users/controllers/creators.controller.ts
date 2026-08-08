@@ -51,7 +51,10 @@ export class CreatorsController {
     @Req() req: AuthenticatedRequest,
     @Param('id') creatorId: string,
   ) {
-    const isFollowing = await this.creatorsService.isFollowing(req.user.id, creatorId);
+    const isFollowing = await this.creatorsService.isFollowing(
+      req.user.id,
+      creatorId,
+    );
     return { isFollowing };
   }
 }
