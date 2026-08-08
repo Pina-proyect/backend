@@ -9,13 +9,26 @@ jest.mock('@nestjs/core', () => ({
       useGlobalPipes: jest.fn(),
       setGlobalPrefix: jest.fn(),
       listen: jest.fn(),
+      enableCors: jest.fn(),
+      use: jest.fn(),
+      get: jest.fn().mockReturnValue({}),
+      useGlobalFilters: jest.fn(),
     }),
   },
 }));
 
 describe('main.ts Bootstrap', () => {
   type AppMock = jest.Mocked<
-    Pick<INestApplication, 'useGlobalPipes' | 'setGlobalPrefix' | 'listen'>
+    Pick<
+      INestApplication,
+      | 'useGlobalPipes'
+      | 'setGlobalPrefix'
+      | 'listen'
+      | 'enableCors'
+      | 'use'
+      | 'get'
+      | 'useGlobalFilters'
+    >
   >;
 
   let mockApp: AppMock;
@@ -28,6 +41,10 @@ describe('main.ts Bootstrap', () => {
       useGlobalPipes: jest.fn(),
       setGlobalPrefix: jest.fn(),
       listen: jest.fn(),
+      enableCors: jest.fn(),
+      use: jest.fn(),
+      get: jest.fn().mockReturnValue({}) as jest.Mock,
+      useGlobalFilters: jest.fn(),
     };
 
     jest

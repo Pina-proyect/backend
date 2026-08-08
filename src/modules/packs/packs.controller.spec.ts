@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PacksController } from './packs.controller';
 import { PacksService } from './packs.service';
 import { PackAccessGuard } from './guards/pack-access.guard';
+import { ConfigService } from '@nestjs/config';
 
 describe('PacksController', () => {
   let controller: PacksController;
@@ -21,6 +22,10 @@ describe('PacksController', () => {
             grantAccess: jest.fn(),
             hasAccess: jest.fn(),
           },
+        },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue(undefined) },
         },
         PackAccessGuard,
       ],

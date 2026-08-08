@@ -4,6 +4,7 @@ import { CreatorRepository } from '../repositories/creator.repository';
 import { CreateCreatorDto } from '../dto/create-creator.dto';
 import { ConfigService } from '@nestjs/config';
 import { BadRequestException } from '@nestjs/common';
+import { EmailService } from '../../email/email.service';
 
 type MockCreatorRepository = Required<jest.Mocked<CreatorRepository>>;
 
@@ -60,6 +61,14 @@ describe('RegistrationService', () => {
         {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue(undefined) },
+        },
+        {
+          provide: EmailService,
+          useValue: {
+            sendVerificationEmail: jest.fn(),
+            sendPasswordResetEmail: jest.fn(),
+            sendWelcomeEmail: jest.fn(),
+          },
         },
       ],
     }).compile();
@@ -160,9 +169,9 @@ describe('RegistrationService', () => {
       });
 
       expect(result).toEqual({
-        status: 'pending',
+        status: 'success',
         message:
-          'Registro completado. Tu cuenta se encuentra en proceso de verificación.',
+          'Registro completado. Revisa tu email para verificar tu cuenta.',
         userId: mockCreator.id,
       });
     });

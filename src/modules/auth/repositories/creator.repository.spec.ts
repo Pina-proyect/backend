@@ -31,6 +31,7 @@ describe('CreatorRepository', () => {
     tokenVersion: 0,
     verificationStatus: 'pending',
     emailVerified: false,
+    acknowledgedAge: false,
     verificationToken: null,
     verificationTokenExpires: null,
     resetToken: null,
