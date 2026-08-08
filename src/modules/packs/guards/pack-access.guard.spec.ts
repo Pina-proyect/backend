@@ -9,7 +9,9 @@ import { PacksService } from '../packs.service';
 
 describe('PackAccessGuard', () => {
   let guard: PackAccessGuard;
-  let packsService: any;
+  let packsService: jest.Mocked<
+    Pick<PacksService, 'getPackById' | 'hasAccess'>
+  >;
 
   const mockPacksService = {
     getPackById: jest.fn(),
@@ -36,8 +38,8 @@ describe('PackAccessGuard', () => {
   });
 
   const createMockExecutionContext = (
-    user: any,
-    params: any,
+    user: { id: string } | null,
+    params: { id?: string },
   ): ExecutionContext => {
     const mockRequest = {
       user,

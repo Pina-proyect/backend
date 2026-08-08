@@ -13,8 +13,9 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { PaymentsService } from './payments.service';
 import { AuthGuard } from '@nestjs/passport';
-import { Response, Request } from 'express';
+import { Response } from 'express';
 import { WebhookPayloadDto } from './dto/webhook-payload.dto';
+import { AuthenticatedRequest } from '../../common/types/authenticated-request';
 
 @Controller('payments')
 export class PaymentsController {
@@ -22,8 +23,11 @@ export class PaymentsController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('create-preference')
-  async createPreference(@Body('packId') packId: string, @Req() req: any) {
-    const userId = req.user.id ?? req.user.sub;
+  async createPreference(
+    @Body('packId') packId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user.id;
     return this.paymentsService.createPreference(packId, userId);
   }
 
@@ -38,8 +42,8 @@ export class PaymentsController {
     @Headers('x-signature') xSignature: string,
     @Headers('x-request-id') xRequestId: string,
   ) {
-    const finalDataId = dataId || id || body?.data?.id || '';
-    const finalId = dataId || id || body?.data?.id || '';
+    const finalDataId = dataId || id || (body?.data?.id as string) || '';
+    const finalId = dataId || id || (body?.data?.id as string) || '';
 
     if (
       !this.paymentsService.validateWebhookSignature(
@@ -57,18 +61,20 @@ export class PaymentsController {
   }
 
   @Get('mercadopago/auth')
-  async mercadopagoAuth(
-    @Query('creatorId') creatorId: string,
-    @Res() res: Response,
-  ) {
+  mercadopagoAuth(@Query('creatorId') creatorId: string, @Res() res: Response) {
     try {
       const url = this.paymentsService.getMercadoPagoAuthUrl(creatorId);
       return res.redirect(url);
-    } catch (error: any) {
-      console.error('[MP OAUTH] Error generando URL:', error?.message);
+    } catch (error: unknown) {
+      console.error(
+        '[MP OAUTH] Error generando URL:',
+        error instanceof Error ? error.message : error,
+      );
       const frontendUrl =
         process.env.FRONTEND_URL || 'https://pina-delta.vercel.app';
-      const msg = encodeURIComponent(error?.message || 'oauth_config_missing');
+      const msg = encodeURIComponent(
+        error instanceof Error ? error.message : 'oauth_config_missing',
+      );
       return res.redirect(
         `${frontendUrl}/settings?tab=monetization&connected=error&message=${msg}`,
       );
@@ -90,8 +96,8 @@ export class PaymentsController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('mercadopago/disconnect')
-  async mercadopagoDisconnect(@Req() req: any) {
-    const creatorId = req.user.id ?? req.user.sub;
+  async mercadopagoDisconnect(@Req() req: AuthenticatedRequest) {
+    const creatorId = req.user.id;
     return this.paymentsService.disconnectMercadoPago(creatorId);
   }
 }

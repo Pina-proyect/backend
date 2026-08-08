@@ -19,7 +19,7 @@ export class LocalStorageService extends StorageProvider {
       await fs.writeFile(filePath, file);
       // Retornamos la URL relativa que será servida por el backend
       return `/uploads/${options.filename}`;
-    } catch (error) {
+    } catch {
       throw new InternalServerErrorException(
         'Error al guardar archivo localmente',
       );
@@ -34,14 +34,14 @@ export class LocalStorageService extends StorageProvider {
       if (await fs.pathExists(filePath)) {
         await fs.remove(filePath);
       }
-    } catch (error) {
+    } catch {
       // No lanzamos error si el archivo no existe, solo ignoramos
     }
   }
 
-  async getUrl(key: string): Promise<string> {
+  getUrl(key: string): Promise<string> {
     // En local, la URL es directa si el servidor expone la carpeta /uploads
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:4000';
-    return `${backendUrl}${key}`;
+    return Promise.resolve(`${backendUrl}${key}`);
   }
 }

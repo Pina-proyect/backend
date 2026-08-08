@@ -181,10 +181,10 @@ describe('RegistrationService', () => {
       creatorRepository.findByDni.mockResolvedValue(null);
       creatorRepository.create.mockResolvedValue(mockCreator as any);
 
-      const dtoWithPassword = {
+      const dtoWithPassword: CreateCreatorDto = {
         ...mockCreateCreatorDto,
         password: 'SuperSecret123',
-      } as any;
+      };
 
       await service.startRegistration(dtoWithPassword);
 

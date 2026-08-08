@@ -20,6 +20,7 @@ import { PackAccessGuard } from './guards/pack-access.guard';
 import { CreatePackDto } from './dto/create-pack.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { AuthenticatedRequest } from '../../common/types/authenticated-request';
 
 @Controller('packs')
 export class PacksController {
@@ -31,7 +32,10 @@ export class PacksController {
   @Post()
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.CREATED)
-  async createPack(@Req() req: any, @Body() data: CreatePackDto) {
+  async createPack(
+    @Req() req: AuthenticatedRequest,
+    @Body() data: CreatePackDto,
+  ) {
     if (req.user.verificationStatus !== 'verified') {
       throw new ForbiddenException(
         'Debes verificar tu identidad antes de crear un paquete de contenido.',
@@ -43,7 +47,7 @@ export class PacksController {
 
   @Get('my-packs')
   @UseGuards(AuthGuard('jwt'))
-  async getMyPacks(@Req() req: any) {
+  async getMyPacks(@Req() req: AuthenticatedRequest) {
     return this.packsService.getMyPacks(req.user.id);
   }
 
@@ -87,7 +91,10 @@ export class PacksController {
 
   @Post('simulate-purchase')
   @UseGuards(AuthGuard('jwt'))
-  async simulatePurchase(@Body('packId') packId: string, @Req() req: any) {
+  async simulatePurchase(
+    @Body('packId') packId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
     if (this.configService.get('NODE_ENV') === 'production') {
       throw new NotFoundException();
     }
@@ -105,7 +112,7 @@ export class PacksController {
   async createComment(
     @Param('id') packId: string,
     @Body() dto: CreateCommentDto,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.packsService.createComment(packId, req.user.id, dto.content);
   }
@@ -115,7 +122,7 @@ export class PacksController {
   async updateComment(
     @Param('id') commentId: string,
     @Body() dto: UpdateCommentDto,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.packsService.updateComment(commentId, req.user.id, dto.content);
   }
@@ -123,7 +130,10 @@ export class PacksController {
   @Delete('comments/:id')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteComment(@Param('id') commentId: string, @Req() req: any) {
+  async deleteComment(
+    @Param('id') commentId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
     await this.packsService.deleteComment(commentId, req.user.id);
   }
 }

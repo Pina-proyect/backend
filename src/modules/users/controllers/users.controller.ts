@@ -13,7 +13,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from '../services/users.service';
 import { UpdateProfileDto } from '../../auth/dto/update-profile.dto';
-import type { Creator } from '@prisma/client';
+import { AuthenticatedRequest } from '../../../common/types/authenticated-request';
 
 @Controller('users')
 export class UsersController {
@@ -22,7 +22,7 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   @Get('profile')
   @HttpCode(HttpStatus.OK)
-  async getProfile(@Req() req: any) {
+  async getProfile(@Req() req: AuthenticatedRequest) {
     const userId = req.user.id;
     const creator = await this.usersService.getProfile(userId);
 
@@ -87,7 +87,7 @@ export class UsersController {
   @Patch('profile')
   @HttpCode(HttpStatus.OK)
   async updateProfile(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
     const userId = req.user.id;

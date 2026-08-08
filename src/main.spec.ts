@@ -43,7 +43,7 @@ describe('main.ts Bootstrap', () => {
       listen: jest.fn(),
       enableCors: jest.fn(),
       use: jest.fn(),
-      get: jest.fn().mockReturnValue({}) as jest.Mock,
+      get: jest.fn().mockReturnValue({}),
       useGlobalFilters: jest.fn(),
     };
 

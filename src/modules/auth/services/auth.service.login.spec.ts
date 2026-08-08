@@ -94,7 +94,7 @@ describe('AuthService login (bcrypt)', () => {
     repo.findByEmail.mockResolvedValueOnce(user);
 
     // Mock de sign para tokens deterministas
-    jwt.sign.mockImplementation((payload: any) => {
+    jwt.sign.mockImplementation((payload: { tokenVersion?: number }) => {
       return typeof payload.tokenVersion !== 'undefined' ? 'REFRESH' : 'ACCESS';
     });
 

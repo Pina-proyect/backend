@@ -6,13 +6,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PacksService } from '../packs.service';
+import { AuthenticatedRequest } from '../../../common/types/authenticated-request';
 
 @Injectable()
 export class PackAccessGuard implements CanActivate {
   constructor(private readonly packsService: PacksService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const user = request.user;
 
     if (!user) {
@@ -21,7 +22,7 @@ export class PackAccessGuard implements CanActivate {
       );
     }
 
-    const packId = request.params.id || request.params.packId;
+    const packId = (request.params.id || request.params.packId) as string;
     if (!packId) {
       throw new NotFoundException('ID del paquete no especificado en la ruta.');
     }

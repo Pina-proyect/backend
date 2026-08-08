@@ -71,7 +71,7 @@ export class DonationsController {
       });
 
       return preference;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // 4) Si falla la preference, marcar Donation como failed
       // (no la borramos: queda como evidencia para debugging)
       await this.prisma.donation.update({
@@ -80,7 +80,9 @@ export class DonationsController {
       });
       console.error('[DONATIONS] Error creating preference:', error);
       throw new InternalServerErrorException(
-        `Error al crear preferencia de donación: ${error?.message || 'unknown'}`,
+        `Error al crear preferencia de donación: ${
+          error instanceof Error ? error.message : 'unknown'
+        }`,
       );
     }
   }

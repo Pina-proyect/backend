@@ -21,6 +21,7 @@ import { LoginCreatorDto } from '../dto/login-creator.dto';
 import { LoginResponseDto } from '../dto/login-response.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { UpdateProfileDto } from '../dto/update-profile.dto';
+import { AuthenticatedRequest } from '../../../common/types/authenticated-request';
 
 /**
  * AuthController
@@ -66,9 +67,9 @@ export class AuthController {
   @Throttle({ default: { limit: 60, ttl: 60000 } })
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
-  async getMe(@Req() req: Request): Promise<Creator> {
+  getMe(@Req() req: AuthenticatedRequest): Creator {
     // req.user es inyectado por el JwtStrategy
-    return req.user as Creator;
+    return req.user;
   }
 
   // --- ENDPOINTS DE GOOGLE OAUTH ---
@@ -79,7 +80,7 @@ export class AuthController {
    */
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleAuth(@Req() _req: any) {
+  googleAuth() {
     // Passport maneja la redirección hacia Google automáticamente.
   }
 
@@ -88,9 +89,9 @@ export class AuthController {
    */
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleAuthCallback(@Req() req: any, @Res() res: Response) {
+  googleAuthCallback(@Req() req: AuthenticatedRequest, @Res() res: Response) {
     // req.user ha sido adjuntado por GoogleStrategy.validate()
-    const creator = req.user as Creator;
+    const creator = req.user;
 
     // Generamos tokens JWT para el usuario
     const tokens = this.authService.generateTokens(creator);
@@ -115,7 +116,9 @@ export class AuthController {
     @Req() req: Request,
     @Body() dto: RefreshTokenDto,
   ): Promise<LoginResponseDto> {
-    const tokenFromCookie = req.cookies?.[this.REFRESH_COOKIE];
+    const tokenFromCookie = req.cookies?.[this.REFRESH_COOKIE] as
+      | string
+      | undefined;
     const effectiveDto: RefreshTokenDto = {
       refreshToken: tokenFromCookie ?? dto?.refreshToken,
     };
@@ -131,7 +134,9 @@ export class AuthController {
     @Req() req: Request,
     @Body() dto: RefreshTokenDto,
   ): Promise<void> {
-    const tokenFromCookie = req.cookies?.[this.REFRESH_COOKIE];
+    const tokenFromCookie = req.cookies?.[this.REFRESH_COOKIE] as
+      | string
+      | undefined;
     const effectiveDto: RefreshTokenDto = {
       refreshToken: tokenFromCookie ?? dto?.refreshToken,
     };
@@ -194,11 +199,11 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async updateProfile(
-    @Req() req: Request,
+    @Req() req: AuthenticatedRequest,
     @Body() updateProfileDto: UpdateProfileDto,
   ): Promise<Creator> {
     // El usuario autenticado está en req.user gracias al AuthGuard
-    const user = req.user as Creator;
+    const user = req.user;
     return this.authService.updateProfile(user.id, updateProfileDto);
   }
 }

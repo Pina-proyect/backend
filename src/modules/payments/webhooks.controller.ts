@@ -38,8 +38,8 @@ export class WebhooksController {
     @Headers('x-signature') xSignature: string,
     @Headers('x-request-id') xRequestId: string,
   ) {
-    const finalDataId = dataId || id || body?.data?.id || '';
-    const finalId = dataId || id || body?.data?.id || '';
+    const finalDataId = dataId || id || (body?.data?.id as string) || '';
+    const finalId = dataId || id || (body?.data?.id as string) || '';
 
     if (
       !this.paymentsService.validateWebhookSignature(

@@ -134,6 +134,7 @@ export class AuthService {
     }
 
     const tokens = this.generateTokens(user);
+    /* eslint-disable @typescript-eslint/no-unused-vars */
     const {
       password,
       resetToken,
@@ -144,6 +145,7 @@ export class AuthService {
       nationalId,
       ...safeUser
     } = user;
+    /* eslint-enable @typescript-eslint/no-unused-vars */
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
@@ -158,14 +160,18 @@ export class AuthService {
    */
   async refreshTokens(dto: RefreshTokenDto): Promise<LoginResponseDto> {
     try {
-      const decoded = this.jwtService.verify(dto.refreshToken);
-      const userId = decoded.sub as string;
-      const tokenVersion = decoded.tokenVersion as number;
+      const decoded = this.jwtService.verify<{
+        sub: string;
+        tokenVersion: number;
+      }>(dto.refreshToken);
+      const userId = decoded.sub;
+      const tokenVersion = decoded.tokenVersion;
       const user = await this.creatorRepository.findById(userId);
       if (!user || user.tokenVersion !== tokenVersion) {
         throw new UnauthorizedException('Refresh token inválido');
       }
       const tokens = this.generateTokens(user);
+      /* eslint-disable @typescript-eslint/no-unused-vars */
       const {
         password,
         resetToken,
@@ -176,6 +182,7 @@ export class AuthService {
         nationalId,
         ...safeUser
       } = user;
+      /* eslint-enable @typescript-eslint/no-unused-vars */
       return {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
@@ -192,8 +199,11 @@ export class AuthService {
    */
   async logout(dto: RefreshTokenDto): Promise<void> {
     try {
-      const decoded = this.jwtService.verify(dto.refreshToken);
-      const userId = decoded.sub as string;
+      const decoded = this.jwtService.verify<{
+        sub: string;
+        tokenVersion: number;
+      }>(dto.refreshToken);
+      const userId = decoded.sub;
       await this.creatorRepository.incrementTokenVersion(userId);
       // No retornamos contenido; el cliente elimina sus tokens.
     } catch {

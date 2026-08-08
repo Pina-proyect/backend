@@ -76,14 +76,16 @@ export class PinasController {
       });
 
       return preference;
-    } catch (error: any) {
+    } catch (error: unknown) {
       await this.prisma.donation.update({
         where: { id: donation.id },
         data: { status: 'failed' },
       });
       console.error('[PINAS] Error creating preference:', error);
       throw new InternalServerErrorException(
-        `Error al crear preferencia de donación: ${error?.message || 'unknown'}`,
+        `Error al crear preferencia de donación: ${
+          error instanceof Error ? error.message : 'unknown'
+        }`,
       );
     }
   }

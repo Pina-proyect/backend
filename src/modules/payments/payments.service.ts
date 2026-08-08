@@ -1,8 +1,40 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { PrismaService } from 'prisma/prisma.service';
+
+/** Payload de un payment de Mercado Pago (GET /v1/payments/:id). */
+interface MercadoPagoPaymentData {
+  id?: number;
+  status?: string;
+  type?: string;
+  external_reference?: string;
+  metadata?: { donation_id?: string };
+}
+
+/** Referencia externa codificada como JSON en external_reference. */
+interface MercadoPagoExternalReference {
+  userId?: string;
+  packId?: string;
+  donationId?: string;
+  type?: string;
+}
+
+/** Respuesta de POST /oauth/token de Mercado Pago. */
+interface MercadoPagoOAuthToken {
+  access_token?: string;
+  refresh_token?: string;
+  public_key?: string;
+}
+
+/** Datos públicos de la cuenta MP (GET /users/me). */
+interface MercadoPagoUserData {
+  first_name?: string;
+  last_name?: string;
+  nickname?: string;
+  email?: string;
+}
 
 @Injectable()
 export class PaymentsService {
@@ -266,13 +298,15 @@ export class PaymentsService {
         if (!response.ok)
           return { received: false, error: 'Payment not found' };
 
-        const paymentData = await response.json();
+        const paymentData = (await response.json()) as MercadoPagoPaymentData;
         const paymentIdStr = paymentData.id?.toString();
 
         // 1) Determinar el donationId de la preference
         //    Fuente principal: metadata.donation_id (commit 4)
         //    Fallback: external_reference.donationId (legacy)
-        const extRef = JSON.parse(paymentData.external_reference || '{}');
+        const extRef = JSON.parse(
+          paymentData.external_reference || '{}',
+        ) as MercadoPagoExternalReference;
         const donationId: string | undefined =
           paymentData.metadata?.donation_id ?? extRef.donationId;
 
@@ -338,9 +372,12 @@ export class PaymentsService {
             }
           }
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('[WEBHOOK ERROR]', error);
-        return { received: false, error: error.message };
+        return {
+          received: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
       }
     }
     return { received: true };
@@ -351,8 +388,8 @@ export class PaymentsService {
    * Lanza InternalServerErrorException si falta MP_CLIENT_ID o MP_REDIRECT_URI
    */
   getMercadoPagoAuthUrl(creatorId: string): string {
-    const clientId = this.configService.get('MP_CLIENT_ID', '');
-    const redirectUri = this.configService.get('MP_REDIRECT_URI', '');
+    const clientId = this.configService.get<string>('MP_CLIENT_ID', '');
+    const redirectUri = this.configService.get<string>('MP_REDIRECT_URI', '');
 
     if (!clientId) {
       console.error('[MP OAUTH] MP_CLIENT_ID no configurado en backend');
@@ -386,8 +423,8 @@ export class PaymentsService {
         'MP_CLIENT_SECRET no configurado en el backend. Pedile al admin que lo agregue en Render env vars.',
       );
     }
-    const clientId = this.configService.get('MP_CLIENT_ID', '');
-    const redirectUri = this.configService.get('MP_REDIRECT_URI', '');
+    const clientId = this.configService.get<string>('MP_CLIENT_ID', '');
+    const redirectUri = this.configService.get<string>('MP_REDIRECT_URI', '');
 
     try {
       const body = new URLSearchParams({
@@ -414,7 +451,7 @@ export class PaymentsService {
         );
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as MercadoPagoOAuthToken;
 
       // Guardamos las credenciales en la base de datos para el creador
       await this.prisma.creator.update({
@@ -427,9 +464,10 @@ export class PaymentsService {
       });
 
       return `${frontendUrl}/settings?tab=monetization&connected=success`;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[MERCADOPAGO OAUTH ERROR]', error);
-      return `${frontendUrl}/settings?tab=monetization&connected=error&message=${encodeURIComponent(error.message)}`;
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      return `${frontendUrl}/settings?tab=monetization&connected=error&message=${encodeURIComponent(errorMsg)}`;
     }
   }
 
@@ -478,7 +516,7 @@ export class PaymentsService {
         return { isConnected: false, provider: 'mercadopago' };
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as MercadoPagoUserData;
       const accountName =
         [data.first_name, data.last_name].filter(Boolean).join(' ').trim() ||
         data.nickname ||
@@ -491,8 +529,11 @@ export class PaymentsService {
         accountName,
         accountEmail,
       };
-    } catch (error: any) {
-      console.error('[MP HEALTH] Error verificando token:', error.message);
+    } catch (error: unknown) {
+      console.error(
+        '[MP HEALTH] Error verificando token:',
+        error instanceof Error ? error.message : error,
+      );
       return {
         isConnected: false,
         provider: 'mercadopago',

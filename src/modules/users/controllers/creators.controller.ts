@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CreatorsService } from '../services/creators.service';
+import { AuthenticatedRequest } from '../../../common/types/authenticated-request';
 
 @Controller('creators')
 export class CreatorsController {
@@ -19,7 +20,10 @@ export class CreatorsController {
   @Post(':id/follow')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.CREATED)
-  async follow(@Req() req: any, @Param('id') creatorId: string) {
+  async follow(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') creatorId: string,
+  ) {
     await this.creatorsService.follow(req.user.id, creatorId);
     return { success: true };
   }
@@ -27,7 +31,10 @@ export class CreatorsController {
   @Delete(':id/follow')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
-  async unfollow(@Req() req: any, @Param('id') creatorId: string) {
+  async unfollow(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') creatorId: string,
+  ) {
     await this.creatorsService.unfollow(req.user.id, creatorId);
     return { success: true };
   }
@@ -40,7 +47,10 @@ export class CreatorsController {
 
   @Get(':id/follow-status')
   @UseGuards(AuthGuard('jwt'))
-  async getFollowStatus(@Req() req: any, @Param('id') creatorId: string) {
+  async getFollowStatus(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') creatorId: string,
+  ) {
     const isFollowing = await this.creatorsService.isFollowing(req.user.id, creatorId);
     return { isFollowing };
   }
