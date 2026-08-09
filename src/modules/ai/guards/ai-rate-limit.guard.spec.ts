@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { ForbiddenException } from '@nestjs/common';
 import { AiRateLimitGuard } from './ai-rate-limit.guard';
 import { CacheService } from '../../../common/cache/cache.service';
 
@@ -43,9 +42,13 @@ describe('AiRateLimitGuard (5/día por usuario)', () => {
 
   it('lanza 429 si el usuario alcanzó el límite diario', async () => {
     cacheGet.mockResolvedValue(5);
-    await expect(guard.canActivate(ctx('u1'))).rejects.toBeInstanceOf(
-      ForbiddenException,
-    );
+    await expect(guard.canActivate(ctx('u1'))).rejects.toMatchObject({
+      status: 429,
+      response: {
+        statusCode: 429,
+        code: 'AI_DAILY_LIMIT_REACHED',
+      },
+    });
     expect(cacheSet).not.toHaveBeenCalled();
   });
 

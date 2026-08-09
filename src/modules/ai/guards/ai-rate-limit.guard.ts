@@ -1,7 +1,8 @@
 import {
   CanActivate,
   ExecutionContext,
-  ForbiddenException,
+  HttpException,
+  HttpStatus,
   Injectable,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -33,12 +34,15 @@ export class AiRateLimitGuard implements CanActivate {
     const key = `ai:analyze:${userId}`;
     const current = (await this.cache.get<number>(key)) ?? 0;
     if (current >= this.dailyLimit) {
-      throw new ForbiddenException({
-        statusCode: 429,
-        message:
-          'Llegaste al límite de generaciones de IA de hoy. Volvé mañana o seguí con el flujo manual.',
-        code: 'AI_DAILY_LIMIT_REACHED',
-      });
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.TOO_MANY_REQUESTS,
+          message:
+            'Llegaste al límite de generaciones de IA de hoy. Volvé mañana o seguí con el flujo manual.',
+          code: 'AI_DAILY_LIMIT_REACHED',
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
     await this.cache.set(key, current + 1, 86400);
     return true;
