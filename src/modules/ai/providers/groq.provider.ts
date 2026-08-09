@@ -26,7 +26,9 @@ export class GroqProvider implements IAiProvider {
       this.client = new Groq({ apiKey });
     } else {
       this.client = null;
-      this.logger.warn('GROQ_API_KEY no configurada — GroqProvider desactivado');
+      this.logger.warn(
+        'GROQ_API_KEY no configurada — GroqProvider desactivado',
+      );
     }
     this.model = config.get<string>('GROQ_MODEL') ?? 'llama-3.1-8b-instant';
   }
@@ -65,7 +67,9 @@ export class GroqProvider implements IAiProvider {
         ? {
             input: completion.usage.prompt_tokens ?? 0,
             output: completion.usage.completion_tokens ?? 0,
-            total: (completion.usage.prompt_tokens ?? 0) + (completion.usage.completion_tokens ?? 0),
+            total:
+              (completion.usage.prompt_tokens ?? 0) +
+              (completion.usage.completion_tokens ?? 0),
           }
         : undefined,
     };

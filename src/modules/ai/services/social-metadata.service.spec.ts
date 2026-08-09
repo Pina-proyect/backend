@@ -19,16 +19,18 @@ describe('SocialMetadataService', () => {
   });
 
   it('normaliza URLs de instagram/tiktok/youtube', () => {
-    expect(service.normalizeUrl('instagram', 'https://instagram.com/luna')).toBe(
-      'https://instagram.com/luna',
-    );
+    expect(
+      service.normalizeUrl('instagram', 'https://instagram.com/luna'),
+    ).toBe('https://instagram.com/luna');
     expect(service.normalizeUrl('youtube', 'youtube.com/@luna')).toBe(
       'https://youtube.com/@luna',
     );
   });
 
   it('devuelve null para URLs inválidas o de otra plataforma', () => {
-    expect(service.normalizeUrl('instagram', 'https://facebook.com/x')).toBeNull();
+    expect(
+      service.normalizeUrl('instagram', 'https://facebook.com/x'),
+    ).toBeNull();
     expect(service.normalizeUrl('youtube', 'not-a-url')).toBeNull();
   });
 

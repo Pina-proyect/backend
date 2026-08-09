@@ -9,7 +9,9 @@ describe('AiRateLimitGuard (5/día por usuario)', () => {
   let cacheGet: jest.Mock;
   let cacheSet: jest.Mock;
 
-  const config = { get: jest.fn((k: string) => (k === 'AI_DAILY_LIMIT' ? 5 : undefined)) };
+  const config = {
+    get: jest.fn((k: string) => (k === 'AI_DAILY_LIMIT' ? 5 : undefined)),
+  };
 
   beforeEach(async () => {
     cacheGet = jest.fn();
@@ -28,7 +30,9 @@ describe('AiRateLimitGuard (5/día por usuario)', () => {
   });
 
   const ctx = (userId: string | undefined): any => ({
-    switchToHttp: (): any => ({ getRequest: (): any => ({ user: userId ? { id: userId } : undefined }) }),
+    switchToHttp: (): any => ({
+      getRequest: (): any => ({ user: userId ? { id: userId } : undefined }),
+    }),
   });
 
   it('permite si el usuario está por debajo del límite e incrementa', async () => {
@@ -39,7 +43,9 @@ describe('AiRateLimitGuard (5/día por usuario)', () => {
 
   it('lanza 429 si el usuario alcanzó el límite diario', async () => {
     cacheGet.mockResolvedValue(5);
-    await expect(guard.canActivate(ctx('u1'))).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(guard.canActivate(ctx('u1'))).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
     expect(cacheSet).not.toHaveBeenCalled();
   });
 

@@ -3,7 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../../prisma/prisma.service';
 import { ProfileAnalyzerService } from './profile-analyzer.service';
 import { AiProviderService } from './ai-provider.service';
-import { SocialMetadataService, EnrichedSocial } from './social-metadata.service';
+import {
+  SocialMetadataService,
+  EnrichedSocial,
+} from './social-metadata.service';
 import { AnalyzeProfileDto } from '../dto/analyze-profile.dto';
 
 describe('ProfileAnalyzerService (router A/B/C/D)', () => {
@@ -11,22 +14,39 @@ describe('ProfileAnalyzerService (router A/B/C/D)', () => {
   let providerAnalyze: jest.Mock;
   let socialsProcess: jest.Mock;
 
-  const config = { get: jest.fn((k: string) => (k === 'AI_FOLLOWER_THRESHOLD' ? 1000 : undefined)) };
+  const config = {
+    get: jest.fn((k: string) =>
+      k === 'AI_FOLLOWER_THRESHOLD' ? 1000 : undefined,
+    ),
+  };
 
   const richSocials: EnrichedSocial[] = [
     { platform: 'youtube', url: 'https://youtube.com/@test', followers: 5000 },
   ];
   const poorSocials: EnrichedSocial[] = [
-    { platform: 'instagram', url: 'https://instagram.com/test', followers: 200 },
+    {
+      platform: 'instagram',
+      url: 'https://instagram.com/test',
+      followers: 200,
+    },
   ];
 
   beforeEach(async () => {
     providerAnalyze = jest.fn();
     socialsProcess = jest.fn();
-    const provider = { analyze: providerAnalyze, chat: jest.fn() } as unknown as AiProviderService;
-    const socials = { process: socialsProcess } as unknown as SocialMetadataService;
+    const provider = {
+      analyze: providerAnalyze,
+      chat: jest.fn(),
+    } as unknown as AiProviderService;
+    const socials = {
+      process: socialsProcess,
+    } as unknown as SocialMetadataService;
     const prisma = {
-      creatorInsight: { create: jest.fn(), findMany: jest.fn(), findFirst: jest.fn() },
+      creatorInsight: {
+        create: jest.fn(),
+        findMany: jest.fn(),
+        findFirst: jest.fn(),
+      },
     } as unknown as PrismaService;
 
     const module: TestingModule = await Test.createTestingModule({

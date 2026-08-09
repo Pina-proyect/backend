@@ -61,7 +61,9 @@ export class DeepSeekProvider implements IAiProvider {
         ? {
             input: completion.usage.prompt_tokens ?? 0,
             output: completion.usage.completion_tokens ?? 0,
-            total: (completion.usage.prompt_tokens ?? 0) + (completion.usage.completion_tokens ?? 0),
+            total:
+              (completion.usage.prompt_tokens ?? 0) +
+              (completion.usage.completion_tokens ?? 0),
           }
         : undefined,
     };

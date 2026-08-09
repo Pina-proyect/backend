@@ -74,9 +74,7 @@ export class AiProviderService {
     ]);
   }
 
-  async analyze(
-    payload: AiAnalysisPayload,
-  ): Promise<AiRawResult> {
+  async analyze(payload: AiAnalysisPayload): Promise<AiRawResult> {
     const available = this.providers;
     if (available.length === 0) {
       throw new Error('Ningún provider de IA configurado');

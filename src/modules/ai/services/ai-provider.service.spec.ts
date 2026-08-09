@@ -56,7 +56,11 @@ describe('AiProviderService (fallback + circuit breaker)', () => {
   };
 
   it('usa Groq si está disponible', async () => {
-    groqAnalyze.mockResolvedValue({ content: '{}', provider: 'groq', model: 'm' });
+    groqAnalyze.mockResolvedValue({
+      content: '{}',
+      provider: 'groq',
+      model: 'm',
+    });
     const result = await service.analyze(payload);
     expect(result.provider).toBe('groq');
     expect(deepseekAnalyze).not.toHaveBeenCalled();
@@ -64,7 +68,11 @@ describe('AiProviderService (fallback + circuit breaker)', () => {
 
   it('hace fallback a DeepSeek si Groq falla', async () => {
     groqAnalyze.mockRejectedValue(new Error('Groq down'));
-    deepseekAnalyze.mockResolvedValue({ content: '{}', provider: 'deepseek', model: 'm' });
+    deepseekAnalyze.mockResolvedValue({
+      content: '{}',
+      provider: 'deepseek',
+      model: 'm',
+    });
     const result = await service.analyze(payload);
     expect(result.provider).toBe('deepseek');
   });
@@ -91,8 +99,6 @@ describe('AiProviderService (fallback + circuit breaker)', () => {
     };
     internal.groq = { available: false };
     internal.deepseek = { available: false };
-    await expect(service.analyze(payload)).rejects.toThrow(
-      'Ningún provider',
-    );
+    await expect(service.analyze(payload)).rejects.toThrow('Ningún provider');
   });
 });

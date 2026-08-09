@@ -2,8 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../../prisma/prisma.service';
 import { AiProviderService } from './ai-provider.service';
-import { SocialMetadataService, EnrichedSocial } from './social-metadata.service';
-import { AiAnalysisResultSchema, AiAnalysisResult } from '../schemas/ai-analysis.schema';
+import {
+  SocialMetadataService,
+  EnrichedSocial,
+} from './social-metadata.service';
+import {
+  AiAnalysisResultSchema,
+  AiAnalysisResult,
+} from '../schemas/ai-analysis.schema';
 import { AnalyzeProfileDto } from '../dto/analyze-profile.dto';
 
 export type AiCase = 'A' | 'B' | 'C' | 'D';
@@ -37,10 +43,7 @@ export class ProfileAnalyzerService {
   }
 
   private maxFollowers(socials: EnrichedSocial[]): number {
-    return socials.reduce(
-      (max, s) => Math.max(max, s.followers ?? 0),
-      0,
-    );
+    return socials.reduce((max, s) => Math.max(max, s.followers ?? 0), 0);
   }
 
   async analyze(
@@ -48,7 +51,11 @@ export class ProfileAnalyzerService {
     dto: AnalyzeProfileDto,
   ): Promise<AnalyzeOutcome> {
     if (!dto.consent) {
-      return { case: 'D', reasons: ['Consentimiento no otorgado'], degraded: true };
+      return {
+        case: 'D',
+        reasons: ['Consentimiento no otorgado'],
+        degraded: true,
+      };
     }
 
     // Normalizar y enriquecer redes; omite inválidas.
@@ -62,7 +69,11 @@ export class ProfileAnalyzerService {
 
     // Caso C: sin redes válidas → flujo de ideas (frontend), sin LLM.
     if (socials.length === 0) {
-      return { case: 'C', reasons: ['Sin redes sociales válidas'], degraded: true };
+      return {
+        case: 'C',
+        reasons: ['Sin redes sociales válidas'],
+        degraded: true,
+      };
     }
 
     const max = this.maxFollowers(socials);
@@ -71,7 +82,9 @@ export class ProfileAnalyzerService {
     if (max < this.threshold) {
       return {
         case: 'B',
-        reasons: [`Máximo de followers (${max}) menor al umbral (${this.threshold})`],
+        reasons: [
+          `Máximo de followers (${max}) menor al umbral (${this.threshold})`,
+        ],
         degraded: true,
       };
     }
@@ -120,14 +133,20 @@ export class ProfileAnalyzerService {
       return {
         case: 'A',
         suggestions: parsed,
-        reasons: [`Máximo de followers (${max}) alcanza el umbral (${this.threshold})`],
+        reasons: [
+          `Máximo de followers (${max}) alcanza el umbral (${this.threshold})`,
+        ],
         degraded: false,
       };
     } catch (e) {
       this.logger.warn(
         `Análisis IA falló, degradando a caso D: ${e instanceof Error ? e.message : String(e)}`,
       );
-      return { case: 'D', reasons: ['El análisis con IA no está disponible'], degraded: true };
+      return {
+        case: 'D',
+        reasons: ['El análisis con IA no está disponible'],
+        degraded: true,
+      };
     }
   }
 }

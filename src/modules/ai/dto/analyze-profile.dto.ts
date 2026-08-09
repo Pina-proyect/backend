@@ -18,7 +18,9 @@ export enum AiLanguage {
 }
 
 export class AnalyzeProfileDto {
-  @IsBoolean({ message: 'Debes aceptar el consentimiento para el análisis con IA' })
+  @IsBoolean({
+    message: 'Debes aceptar el consentimiento para el análisis con IA',
+  })
   consent: boolean;
 
   @IsOptional()

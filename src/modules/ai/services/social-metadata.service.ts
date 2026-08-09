@@ -33,16 +33,22 @@ export class SocialMetadataService {
     if (!trimmed) return null;
     let parsed: URL;
     try {
-      parsed = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`);
+      parsed = new URL(
+        trimmed.startsWith('http') ? trimmed : `https://${trimmed}`,
+      );
     } catch {
       return null;
     }
     const host = parsed.hostname.replace(/^www\./, '').toLowerCase();
     switch (platform) {
       case 'instagram':
-        return /instagram\.com$/.test(host) ? `https://${host}${parsed.pathname}` : null;
+        return /instagram\.com$/.test(host)
+          ? `https://${host}${parsed.pathname}`
+          : null;
       case 'tiktok':
-        return /tiktok\.com$/.test(host) ? `https://${host}${parsed.pathname}` : null;
+        return /tiktok\.com$/.test(host)
+          ? `https://${host}${parsed.pathname}`
+          : null;
       case 'youtube':
         return /(youtube\.com|youtu\.be)$/.test(host)
           ? `https://${host}${parsed.pathname}${parsed.search}`
@@ -53,7 +59,9 @@ export class SocialMetadataService {
   }
 
   private extractYouTubeHandle(url: string): string | null {
-    const m = url.match(/(?:youtube\.com\/@|youtu\.be\/@|youtube\.com\/c\/|youtube\.com\/channel\/)([^/?#]+)/);
+    const m = url.match(
+      /(?:youtube\.com\/@|youtu\.be\/@|youtube\.com\/c\/|youtube\.com\/channel\/)([^/?#]+)/,
+    );
     return m ? m[1] : null;
   }
 
@@ -74,7 +82,13 @@ export class SocialMetadataService {
         return base;
       }
       const data = (await res.json()) as {
-        items?: { statistics?: { subscriberCount?: string; viewCount?: string; videoCount?: string } }[];
+        items?: {
+          statistics?: {
+            subscriberCount?: string;
+            viewCount?: string;
+            videoCount?: string;
+          };
+        }[];
       };
       const item = data.items?.[0];
       if (!item?.statistics) return base;

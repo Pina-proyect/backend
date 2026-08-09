@@ -18,15 +18,16 @@ export enum SocialPlatform {
 }
 
 export class SocialLinkDto {
-  @IsEnum(SocialPlatform, { message: 'La plataforma debe ser instagram, tiktok o youtube' })
+  @IsEnum(SocialPlatform, {
+    message: 'La plataforma debe ser instagram, tiktok o youtube',
+  })
   platform: SocialPlatform;
 
   @IsString({ message: 'La URL debe ser un texto' })
   @IsUrl({ require_protocol: false }, { message: 'La URL no es válida' })
-  @Matches(
-    /(instagram\.com|tiktok\.com|youtube\.com|youtu\.be)/i,
-    { message: 'La URL debe pertenecer a Instagram, TikTok o YouTube' },
-  )
+  @Matches(/(instagram\.com|tiktok\.com|youtube\.com|youtu\.be)/i, {
+    message: 'La URL debe pertenecer a Instagram, TikTok o YouTube',
+  })
   url: string;
 
   @IsOptional()

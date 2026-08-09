@@ -15,7 +15,10 @@ import { AuthenticatedRequest } from '../../common/types/authenticated-request';
 import { AiRateLimitGuard } from './guards/ai-rate-limit.guard';
 import { ProfileAnalyzerService } from './services/profile-analyzer.service';
 import { AiProviderService } from './services/ai-provider.service';
-import { AnalyzeProfileDto, OnboardingIdeasDto } from './dto/analyze-profile.dto';
+import {
+  AnalyzeProfileDto,
+  OnboardingIdeasDto,
+} from './dto/analyze-profile.dto';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 @Controller('ai')
@@ -31,7 +34,10 @@ export class AiController {
   @Post('profile/analyze')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AiRateLimitGuard)
-  async analyze(@Req() req: AuthenticatedRequest, @Body() dto: AnalyzeProfileDto) {
+  async analyze(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: AnalyzeProfileDto,
+  ) {
     const userId = req.user.id;
     const outcome = await this.analyzer.analyze(userId, dto);
 
@@ -66,7 +72,10 @@ export class AiController {
     });
 
     // Caso D sin LLM disponible por falta de keys → 503 con sugerencia de flujo manual.
-    if (outcome.case === 'D' && !outcome.reasons.includes('Consentimiento no otorgado')) {
+    if (
+      outcome.case === 'D' &&
+      !outcome.reasons.includes('Consentimiento no otorgado')
+    ) {
       const hasGroq = !!process.env.GROQ_API_KEY;
       const hasDeepseek = !!process.env.DEEPSEEK_API_KEY;
       if (!hasGroq && !hasDeepseek) {
@@ -86,7 +95,10 @@ export class AiController {
   @Post('onboarding/ideas')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AiRateLimitGuard)
-  async ideas(@Req() req: AuthenticatedRequest, @Body() dto: OnboardingIdeasDto) {
+  async ideas(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: OnboardingIdeasDto,
+  ) {
     const userId = req.user.id;
     try {
       // 1 llamada stateless por paso, con contexto del insight anterior.
@@ -119,7 +131,10 @@ export class AiController {
             model: result.model,
             language: 'es',
             tokenUsage: result.usage ?? { input: 0, output: 0, total: 0 },
-            inputSnapshot: { stepIndex: dto.stepIndex, answers: dto.answers ?? [] },
+            inputSnapshot: {
+              stepIndex: dto.stepIndex,
+              answers: dto.answers ?? [],
+            },
             accepted: false,
           },
         },
