@@ -103,7 +103,9 @@ export class UpdateProfileDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(255, { message: 'La bio sugerida no puede exceder 255 caracteres' })
+  @MaxLength(255, {
+    message: 'La bio sugerida no puede exceder 255 caracteres',
+  })
   aiSuggestedBio?: string;
 
   @IsOptional()

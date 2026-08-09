@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreatorRepository } from '../../auth/repositories/creator.repository';
 import { UpdateProfileDto } from '../../auth/dto/update-profile.dto';
+import { mapUpdateProfileDto } from '../../auth/services/update-profile.mapper';
 import { PrismaService } from 'prisma/prisma.service';
 import type { Creator } from '@prisma/client';
 
@@ -36,7 +37,7 @@ export class UsersService {
     // Actualizar el perfil
     const updatedCreator = await this.creatorRepository.update(
       userId,
-      updateData,
+      mapUpdateProfileDto(updateData),
     );
 
     if (!updatedCreator) {
