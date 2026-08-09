@@ -19,6 +19,7 @@ import { NotificationModule } from './modules/notifications/notification.module'
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { CacheModule } from './common/cache/cache.module';
 import { EmailModule } from './modules/email/email.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -52,6 +53,15 @@ import { EmailModule } from './modules/email/email.module';
         REDIS_URL: Joi.string().uri().optional().allow(''),
         RESEND_API_KEY: Joi.string().optional().allow(''),
         EMAIL_FROM: Joi.string().optional().allow(''),
+        // ── AI Onboarding (v1.18) ──────────────────────────────
+        GROQ_API_KEY: Joi.string().optional().allow(''),
+        DEEPSEEK_API_KEY: Joi.string().optional().allow(''),
+        YOUTUBE_API_KEY: Joi.string().optional().allow(''),
+        AI_FOLLOWER_THRESHOLD: Joi.number().default(1000),
+        AI_DAILY_LIMIT: Joi.number().default(5),
+        AI_MONTHLY_BUDGET_USD: Joi.number().optional().allow(''),
+        AI_CB_FAILURE_THRESHOLD: Joi.number().default(3),
+        AI_CB_RESET_MS: Joi.number().default(30000),
       }),
     }),
     ServeStaticModule.forRoot({
@@ -70,6 +80,7 @@ import { EmailModule } from './modules/email/email.module';
     AnalyticsModule,
     CacheModule,
     EmailModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [
