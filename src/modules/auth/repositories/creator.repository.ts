@@ -60,10 +60,6 @@ export class CreatorRepository {
     });
   }
 
-  async updateVerification(id: string, data: Partial<Creator>) {
-    return this.prisma.creator.update({ where: { id }, data });
-  }
-
   /**
    * incrementTokenVersion
    * Incrementa en 1 la versión de token para invalidar refresh tokens existentes.

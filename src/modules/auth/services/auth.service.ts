@@ -16,6 +16,7 @@ import { LoginCreatorDto } from '../dto/login-creator.dto';
 import { LoginResponseDto } from '../dto/login-response.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { UpdateProfileDto } from '../dto/update-profile.dto';
+import { mapUpdateProfileDto } from './update-profile.mapper';
 
 /**
  * AuthService
@@ -336,10 +337,10 @@ export class AuthService {
       }
     }
 
-    // Actualizar el perfil
-    return this.creatorRepository.update(userId, {
-      slug: updateData.slug,
-      bio: updateData.bio,
-    });
+    // Actualizar el perfil (solo los campos presentes en el DTO)
+    return this.creatorRepository.update(
+      userId,
+      mapUpdateProfileDto(updateData),
+    );
   }
 }

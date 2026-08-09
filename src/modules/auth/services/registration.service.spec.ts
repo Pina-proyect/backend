@@ -41,7 +41,6 @@ describe('RegistrationService', () => {
       findByDni: jest.fn(),
       create: jest.fn(),
       findById: jest.fn(),
-      updateVerification: jest.fn(),
       findByProvider: jest.fn(),
       incrementTokenVersion: jest.fn(),
       findBySlug: jest.fn(),

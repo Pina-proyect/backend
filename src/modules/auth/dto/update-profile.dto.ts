@@ -7,7 +7,12 @@ import {
   Matches,
   MaxLength,
   IsNotEmpty,
+  IsArray,
+  ValidateNested,
+  IsObject,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+import { SocialLinkDto } from '../../ai/dto/social-link.dto';
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -80,4 +85,36 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   gender?: string;
+
+  // ── IA Onboarding (v1.18) ───────────────────────────
+  @IsOptional()
+  @IsArray({ message: 'Las redes sociales deben ser una lista' })
+  @ValidateNested({ each: true })
+  @Type(() => SocialLinkDto)
+  socialLinks?: SocialLinkDto[];
+
+  @IsOptional()
+  @IsString()
+  aiSummary?: string;
+
+  @IsOptional()
+  @IsString()
+  aiSuggestedNiche?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255, { message: 'La bio sugerida no puede exceder 255 caracteres' })
+  aiSuggestedBio?: string;
+
+  @IsOptional()
+  @IsObject()
+  aiSuggestedGoal?: { title: string; amount: number; currency: string };
+
+  @IsOptional()
+  @IsString()
+  aiSuggestedPlan?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  aiPlanAccepted?: boolean;
 }

@@ -32,6 +32,14 @@ describe('CreatorRepository', () => {
     verificationStatus: 'pending',
     emailVerified: false,
     acknowledgedAge: false,
+    socialLinks: null,
+    aiSummary: null,
+    aiSuggestedNiche: null,
+    aiSuggestedBio: null,
+    aiSuggestedGoal: null,
+    aiSuggestedPlan: null,
+    aiPlanAccepted: false,
+    aiLastAnalyzedAt: null,
     verificationToken: null,
     verificationTokenExpires: null,
     resetToken: null,
@@ -155,40 +163,6 @@ describe('CreatorRepository', () => {
         where: { id: 'creator-1' },
       });
       expect(result).toEqual(sampleCreator);
-    });
-  });
-
-  describe('updateVerification', () => {
-    it('debería llamar a update con where.id y data parcial', async () => {
-      const updated: Creator = {
-        ...sampleCreator,
-        verificationStatus: 'verified',
-      };
-      prismaMock.creator.update.mockResolvedValueOnce(updated);
-
-      const result = await repository.updateVerification('creator-1', {
-        verificationStatus: 'verified',
-        selfiePath: '/new-selfie.jpg',
-      });
-
-      expect(prismaMock.creator.update).toHaveBeenCalledWith({
-        where: { id: 'creator-1' },
-        data: {
-          verificationStatus: 'verified',
-          selfiePath: '/new-selfie.jpg',
-        },
-      });
-      expect(result).toEqual(updated);
-    });
-
-    it('debería propagar errores de prisma en update', async () => {
-      prismaMock.creator.update.mockRejectedValueOnce(new Error('DB down'));
-
-      await expect(
-        repository.updateVerification('creator-1', {
-          verificationStatus: 'rejected',
-        }),
-      ).rejects.toThrow('DB down');
     });
   });
 });
