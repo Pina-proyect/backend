@@ -66,6 +66,24 @@ model Creator {
   // Age Gate: confirmación de mayoría de edad
   acknowledgedAge          Boolean   @default(false)
 
+  // ── AI Onboarding (v1.18) ──────────────────────
+  // Redes sociales conectadas: [{platform, url, followers?, stats?}]
+  socialLinks Json?
+  // Resumen corto generado por IA del perfil del creador
+  aiSummary String? @db.Text
+  // Nicho sugerido por IA
+  aiSuggestedNiche String?
+  // Bio sugerida por IA (máx 255 caracteres)
+  aiSuggestedBio String? @db.VarChar(255)
+  // Objetivo de donación sugerido: {title, amount, currency}
+  aiSuggestedGoal Json?
+  // Plan de publicación sugerido (lista separada por saltos de línea)
+  aiSuggestedPlan String? @db.Text
+  // Aceptación del plan sugerido (dashboard "Tu plan Pina")
+  aiPlanAccepted Boolean @default(false)
+  // Última vez que se analizó el perfil con IA
+  aiLastAnalyzedAt DateTime?
+
   // Relación con el contenido multimedia
   media             Media[]
   // Relación con los paquetes de contenido creados por este usuario
@@ -82,6 +100,8 @@ model Creator {
   notifications     Notification[]
   // Comentarios del creador
   comments          Comment[]
+  // Insights generados por IA durante el onboarding (v1.18)
+  aiInsights        CreatorInsight[]
 
   createdAt DateTime @default(now())
   // Marca de actualización automática
@@ -89,6 +109,23 @@ model Creator {
 
   // Índice para búsqueda por proveedor/ID
   @@unique([provider, providerId])
+}
+
+model CreatorInsight {
+  id        String   @id @default(uuid())
+  creatorId String
+  creator   Creator  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  // Tipo de insight: 'onboarding' | 'idea-step'
+  type      String
+  // Caso resuelto: A | B | C
+  case      String
+  // Contenido generado (JSON serializado)
+  content   String   @db.Text
+  // Metadatos: {case, provider, model, language, tokenUsage, inputSnapshot, accepted}
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([creatorId, createdAt])
 }
 
 model Donation {

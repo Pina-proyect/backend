@@ -322,6 +322,46 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
+"@embedded-postgres/darwin-arm64@^18.4.0-beta.17":
+  version "18.4.0-beta.17"
+  resolved "https://registry.yarnpkg.com/@embedded-postgres/darwin-arm64/-/darwin-arm64-18.4.0-beta.17.tgz#75812aea93f42c71e5b32d4a7dc363b87695c0ed"
+  integrity sha512-Kg1ZMNFzkVIJs3g4V2UYEc5X005km9rGinxFBH8R1sOU2Rblvz4pt2Uf93Pu8Rk273Ue9HIdrbMPpgUqwjUi0Q==
+
+"@embedded-postgres/darwin-x64@^18.4.0-beta.17":
+  version "18.4.0-beta.17"
+  resolved "https://registry.yarnpkg.com/@embedded-postgres/darwin-x64/-/darwin-x64-18.4.0-beta.17.tgz#e73b8944f364199f51f54e407945fa094b1b16de"
+  integrity sha512-4tShSYWMxUQTSWoQAdLnHISvRj6L9gTch9/31ASJPg6wgyN64LDRwMcOINEWybM7N0ropJ3nTYhFT3UX1bKY5Q==
+
+"@embedded-postgres/linux-arm64@^18.4.0-beta.17":
+  version "18.4.0-beta.17"
+  resolved "https://registry.yarnpkg.com/@embedded-postgres/linux-arm64/-/linux-arm64-18.4.0-beta.17.tgz#1be84fe7fd70594f3e7bd124ed028c07d5d37823"
+  integrity sha512-TIzjtGnDGSD/LbdW0OWCEcbI+YVT0WKSfSr20TCkkP4UR8zeKe+QCZbO0/CM4hS9EWyZ4cDebjRvpRc3iMi6wg==
+
+"@embedded-postgres/linux-arm@^18.4.0-beta.17":
+  version "18.4.0-beta.17"
+  resolved "https://registry.yarnpkg.com/@embedded-postgres/linux-arm/-/linux-arm-18.4.0-beta.17.tgz#11c50c8802b91f96cfe09b9e914add319df71a19"
+  integrity sha512-VuD1nFasN7yG57zpJcp6MBXM0nXqGfb8GBQV+f1FGJ17+VMNYLIFLhFp99UlY4xnWG74FQC4NPYw8eCwSTJ6qg==
+
+"@embedded-postgres/linux-ia32@^18.4.0-beta.17":
+  version "18.4.0-beta.17"
+  resolved "https://registry.yarnpkg.com/@embedded-postgres/linux-ia32/-/linux-ia32-18.4.0-beta.17.tgz#bd74feb11be715097a52ef97d936fcb60a5c7063"
+  integrity sha512-aSRe4kknqRHuedtpo/rDIaqa8r9VrKIgW9p5FkJyIFqUUkIkxRqND1dg8xrDRREcSUXRJKS0x+j/AuxflgYIfg==
+
+"@embedded-postgres/linux-ppc64@^18.4.0-beta.17":
+  version "18.4.0-beta.17"
+  resolved "https://registry.yarnpkg.com/@embedded-postgres/linux-ppc64/-/linux-ppc64-18.4.0-beta.17.tgz#35be783745e81da4576e90298c25a2b100086518"
+  integrity sha512-zO2RRUFdKRPplrdhmglG39VXJZzDXu3P3ONAG1sFPhGh89vbk24Btd5P7uOmQLIpWehzL0s+UqUWoeE/ZUKvgw==
+
+"@embedded-postgres/linux-x64@^18.4.0-beta.17":
+  version "18.4.0-beta.17"
+  resolved "https://registry.yarnpkg.com/@embedded-postgres/linux-x64/-/linux-x64-18.4.0-beta.17.tgz#93ec75a1247b30f1a0a43c14328356cadbc7569d"
+  integrity sha512-jVw/MdDtIX/vICH/DKIe6/mHpiCggdx6QVyza4vt/NbcZFsL0KhwglF6F1Koqx3gRBZ9XtN+vi63EsqSyqOSxA==
+
+"@embedded-postgres/windows-x64@^18.4.0-beta.17":
+  version "18.4.0-beta.17"
+  resolved "https://registry.yarnpkg.com/@embedded-postgres/windows-x64/-/windows-x64-18.4.0-beta.17.tgz#a2b4f70e310805d0c18df8101e94c55337406726"
+  integrity sha512-AwRerliA4IGWyW5jWBvHt5vidVUSB0QQW9Tt2y7ScnmifnCb/awfxZr4BkBSTv+gNt8Djcddqs+xSF5Z6/CkTg==
+
 "@eslint-community/eslint-utils@^4.8.0", "@eslint-community/eslint-utils@^4.9.1":
   version "4.9.1"
   resolved "https://registry.yarnpkg.com/@eslint-community/eslint-utils/-/eslint-utils-4.9.1.tgz#4e90af67bc51ddee6cdef5284edf572ec376b595"
@@ -2206,6 +2246,11 @@ asap@^2.0.0:
   resolved "https://registry.npmjs.org/asap/-/asap-2.0.6.tgz"
   integrity sha512-BSHWgDSAiKs50o2Re8ppvp3seVHXSRM44cdSsT9FfNEUUZLOGWVCsiWaRPWM1Znn+mqZ1OfVZ3z3DWEzSp7hRA==
 
+async-exit-hook@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/async-exit-hook/-/async-exit-hook-2.0.1.tgz#8bd8b024b0ec9b1c01cccb9af9db29bd717dfaf3"
+  integrity sha512-NW2cX8m1Q7KPA7a5M2ULQeZ2wR5qI5PAbw5L0UOMxdioVk9PMZ0h1TmyZEkPYrCvYjDlFICusOu1dlEKAAeXBw==
+
 asynckit@^0.4.0:
   version "0.4.0"
   resolved "https://registry.npmjs.org/asynckit/-/asynckit-0.4.0.tgz"
@@ -3005,6 +3050,23 @@ electron-to-chromium@^1.5.328:
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.5.367.tgz#ceae3cb3f2939d03a4f0f9b70caf93b7400fa705"
   integrity sha512-4Mk/mrynCNQ+atY40D3UpmhLWB6AHMbYMlIrPhHcMF6x0L7O0b052FCAsxw1LlaR++UFuNg3D/A6XCuGDa0guQ==
 
+embedded-postgres@^18.4.0-beta.17:
+  version "18.4.0-beta.17"
+  resolved "https://registry.yarnpkg.com/embedded-postgres/-/embedded-postgres-18.4.0-beta.17.tgz#77f699eb8212e4ee8bbf6a04af798101ef39abf3"
+  integrity sha512-ORT/A1YiO6ecpRHpyIIBgyCR/8ASqqYZuFw11aX9PkqTX3FUM5+9sNOXY1mGIixxsm2TWSIA5WghJEk7A5ZxVw==
+  dependencies:
+    async-exit-hook "^2.0.1"
+    pg "^8.7.3"
+  optionalDependencies:
+    "@embedded-postgres/darwin-arm64" "^18.4.0-beta.17"
+    "@embedded-postgres/darwin-x64" "^18.4.0-beta.17"
+    "@embedded-postgres/linux-arm" "^18.4.0-beta.17"
+    "@embedded-postgres/linux-arm64" "^18.4.0-beta.17"
+    "@embedded-postgres/linux-ia32" "^18.4.0-beta.17"
+    "@embedded-postgres/linux-ppc64" "^18.4.0-beta.17"
+    "@embedded-postgres/linux-x64" "^18.4.0-beta.17"
+    "@embedded-postgres/windows-x64" "^18.4.0-beta.17"
+
 emittery@^0.13.1:
   version "0.13.1"
   resolved "https://registry.npmjs.org/emittery/-/emittery-0.13.1.tgz"
@@ -3720,6 +3782,11 @@ graceful-fs@^4.1.2, graceful-fs@^4.1.6, graceful-fs@^4.2.0, graceful-fs@^4.2.11,
   version "4.2.11"
   resolved "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.11.tgz"
   integrity sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==
+
+groq-sdk@^1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/groq-sdk/-/groq-sdk-1.5.0.tgz#5793f7c92c5f5c8db6485df8111773a72c1ea3d7"
+  integrity sha512-aa5yaMVd8kehBacU3Pp7roObOuPksZNau+nPW+GDDB7OV/8jybVzeeOv54lZj8owNNIc3a7Tu2eYI7/kIwtMNw==
 
 handlebars@^4.7.9:
   version "4.7.9"
@@ -4930,6 +4997,11 @@ onetime@^5.1.0, onetime@^5.1.2:
   dependencies:
     mimic-fn "^2.1.0"
 
+openai@^7.4.0:
+  version "7.4.0"
+  resolved "https://registry.yarnpkg.com/openai/-/openai-7.4.0.tgz#68a91d333c388cffaa6b276b160acaf81b342a9f"
+  integrity sha512-+C9Muit5x8j9R8ej8ZzVgKcrVDtqFqTy9gxFdov0EItLgU68zrJtF9ZeT0cyqJQW9S3PCJkdFgADtRGquRBtew==
+
 optionator@^0.9.3:
   version "0.9.4"
   resolved "https://registry.npmjs.org/optionator/-/optionator-0.9.4.tgz"
@@ -5115,6 +5187,62 @@ perfect-debounce@^1.0.0:
   resolved "https://registry.yarnpkg.com/perfect-debounce/-/perfect-debounce-1.0.0.tgz#9c2e8bc30b169cc984a58b7d5b28049839591d2a"
   integrity sha512-xCy9V055GLEqoFaHoC1SoLIaLmWctgCUaBaWxDZ7/Zx4CTyX7cJQLJOok/orfjZAh9kEYpjJa4d0KcJmCbctZA==
 
+pg-cloudflare@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/pg-cloudflare/-/pg-cloudflare-1.4.0.tgz#4b4c20e6d8ae531d400730f4804571a8d62f1497"
+  integrity sha512-Vo7z/6rrQYxpNRylp4Tlob2elzbh+N/MOQbxFVWCxS7oEx6jF53GTJFxK2WWpKuBRkmiin4Mt+xofFDjx09R0A==
+
+pg-connection-string@^2.14.0:
+  version "2.14.0"
+  resolved "https://registry.yarnpkg.com/pg-connection-string/-/pg-connection-string-2.14.0.tgz#abc26ee4f37c56c0f3ae0fcf0b0653cc4e1c0fd9"
+  integrity sha512-XwWDGcLRGCXAR8F/AM5bG7Q+A3Wm2s6QeEjlOKZLlH3UYcguiqCWKyWXVag5TLTIjR7oOJUY8kcADaZgWPyLeg==
+
+pg-int8@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/pg-int8/-/pg-int8-1.0.1.tgz#943bd463bf5b71b4170115f80f8efc9a0c0eb78c"
+  integrity sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==
+
+pg-pool@^3.14.0:
+  version "3.14.0"
+  resolved "https://registry.yarnpkg.com/pg-pool/-/pg-pool-3.14.0.tgz#f35ae4eb846780cad71af24099b3edfa9781ad90"
+  integrity sha512-gKtPkFdQPU3DksooVLi9LsjZxrsBUZIpa+7aVx+LV5pNh0KzP4Zleud2po+ConrxbuXGBJ6Hfer6hdgpIBpBaw==
+
+pg-protocol@^1.16.0:
+  version "1.16.0"
+  resolved "https://registry.yarnpkg.com/pg-protocol/-/pg-protocol-1.16.0.tgz#cffb008826561ee9770a8a15dc21f269d731b305"
+  integrity sha512-sILXutLVjCLjcDuOmvhX5e2Z4cS5qG/6Bu3VkpFwdf/633ElGLpEh9bgmuI5I4sqKqkifQiGyiCcx1HdtrK7tg==
+
+pg-types@2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/pg-types/-/pg-types-2.2.0.tgz#2d0250d636454f7cfa3b6ae0382fdfa8063254a3"
+  integrity sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==
+  dependencies:
+    pg-int8 "1.0.1"
+    postgres-array "~2.0.0"
+    postgres-bytea "~1.0.0"
+    postgres-date "~1.0.4"
+    postgres-interval "^1.1.0"
+
+pg@^8.7.3:
+  version "8.23.0"
+  resolved "https://registry.yarnpkg.com/pg/-/pg-8.23.0.tgz#5c2026d32bd0cb4fbd9196bac1ecf5ae66607180"
+  integrity sha512-Ip2EQCngowJLGOfCwkFhPXU7/ljlhn6Rxlmy4XYfL2Y+vyRM59+8uR2xqRWKdYmbXmxCFOAmKxBuSUCdF34qLg==
+  dependencies:
+    pg-connection-string "^2.14.0"
+    pg-pool "^3.14.0"
+    pg-protocol "^1.16.0"
+    pg-types "2.2.0"
+    pgpass "1.0.5"
+  optionalDependencies:
+    pg-cloudflare "^1.4.0"
+
+pgpass@1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/pgpass/-/pgpass-1.0.5.tgz#9b873e4a564bb10fa7a7dbd55312728d422a223d"
+  integrity sha512-FdW9r/jQZhSeohs1Z3sI1yxFQNFvMcnmfuj4WBMUTxOrAyLMaTcE1aAMBiTlbMNaXvBCQuVi0R7hd8udDSP7ug==
+  dependencies:
+    split2 "^4.1.0"
+
 picocolors@^1.1.1:
   version "1.1.1"
   resolved "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz"
@@ -5167,6 +5295,28 @@ postal-mime@2.7.4:
   version "2.7.4"
   resolved "https://registry.yarnpkg.com/postal-mime/-/postal-mime-2.7.4.tgz#3718d1f188357ed86f906f1db8d4ca455efa4927"
   integrity sha512-0WdnFQYUrPGGTFu1uOqD2s7omwua8xaeYGdO6rb88oD5yJ/4pPHDA4sdWqfD8wQVfCny563n/HQS7zTFft+f/g==
+
+postgres-array@~2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/postgres-array/-/postgres-array-2.0.0.tgz#48f8fce054fbc69671999329b8834b772652d82e"
+  integrity sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA==
+
+postgres-bytea@~1.0.0:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/postgres-bytea/-/postgres-bytea-1.0.1.tgz#c40b3da0222c500ff1e51c5d7014b60b79697c7a"
+  integrity sha512-5+5HqXnsZPE65IJZSMkZtURARZelel2oXUEO8rH83VS/hxH5vv1uHquPg5wZs8yMAfdv971IU+kcPUczi7NVBQ==
+
+postgres-date@~1.0.4:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/postgres-date/-/postgres-date-1.0.7.tgz#51bc086006005e5061c591cee727f2531bf641a8"
+  integrity sha512-suDmjLVQg78nMK2UZ454hAG+OAW+HQPZ6n++TNDUX+L0+uUlLywnoxJKDou51Zm+zTCjrCl0Nq6J9C5hP9vK/Q==
+
+postgres-interval@^1.1.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/postgres-interval/-/postgres-interval-1.2.0.tgz#b460c82cb1587507788819a06aa0fffdb3544695"
+  integrity sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==
+  dependencies:
+    xtend "^4.0.0"
 
 prelude-ls@^1.2.1:
   version "1.2.1"
@@ -5617,6 +5767,11 @@ source-map@^0.7.3, source-map@^0.7.4:
   version "0.7.6"
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.7.6.tgz#a3658ab87e5b6429c8a1f3ba0083d4c61ca3ef02"
   integrity sha512-i5uvt8C3ikiWeNZSVZNWcfZPItFQOsYTUAOkcUPGd8DqDy1uOUikjt5dG+uRlwyvR108Fb9DOd4GvXfT0N2/uQ==
+
+split2@^4.1.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/split2/-/split2-4.2.0.tgz#c9c5920904d148bab0b9f67145f245a86aadbfa4"
+  integrity sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==
 
 sprintf-js@~1.0.2:
   version "1.0.3"
@@ -6251,6 +6406,11 @@ write-file-atomic@^4.0.2:
     imurmurhash "^0.1.4"
     signal-exit "^3.0.7"
 
+xtend@^4.0.0:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/xtend/-/xtend-4.0.2.tgz#bb72779f5fa465186b1f438f674fa347fdb5db54"
+  integrity sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==
+
 y18n@^5.0.5:
   version "5.0.8"
   resolved "https://registry.npmjs.org/y18n/-/y18n-5.0.8.tgz"
@@ -6300,3 +6460,8 @@ yoctocolors-cjs@^2.1.3:
   version "2.1.3"
   resolved "https://registry.yarnpkg.com/yoctocolors-cjs/-/yoctocolors-cjs-2.1.3.tgz#7e4964ea8ec422b7a40ac917d3a344cfd2304baa"
   integrity sha512-U/PBtDf35ff0D8X8D0jfdzHYEPFxAI7jJlxZXwCSez5M3190m+QobIfh+sWDWSHMCWWJN2AWamkegn6vr6YBTw==
+
+zod@^4.4.3:
+  version "4.4.3"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-4.4.3.tgz#b680f172885d18bbebf21a834ea25e55a1bbf356"
+  integrity sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==
