@@ -131,4 +131,41 @@ describe('ProfileAnalyzerService (router A/B/C/D)', () => {
     expect(out.case).toBe('D');
     expect(out.degraded).toBe(true);
   });
+
+  it('usa AI_FOLLOWER_THRESHOLD configurado (custom) para decidir A/B', async () => {
+    // Umbral custom 2000: 1500 followers → caso B (aunque superaría el default 1000)
+    const customConfig = {
+      get: jest.fn((k: string) =>
+        k === 'AI_FOLLOWER_THRESHOLD' ? 2000 : undefined,
+      ),
+    };
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ProfileAnalyzerService,
+        {
+          provide: AiProviderService,
+          useValue: { analyze: providerAnalyze, chat: jest.fn() },
+        },
+        {
+          provide: SocialMetadataService,
+          useValue: { process: socialsProcess },
+        },
+        {
+          provide: PrismaService,
+          useValue: { creatorInsight: { create: jest.fn() } },
+        },
+        { provide: ConfigService, useValue: customConfig },
+      ],
+    }).compile();
+    const customService = module.get<ProfileAnalyzerService>(
+      ProfileAnalyzerService,
+    );
+
+    socialsProcess.mockResolvedValue([
+      { platform: 'youtube', url: 'https://youtube.com/@t', followers: 1500 },
+    ]);
+    const out = await customService.analyze('u1', dto());
+    expect(out.case).toBe('B');
+    expect(providerAnalyze).not.toHaveBeenCalled();
+  });
 });

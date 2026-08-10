@@ -43,4 +43,75 @@ describe('SocialMetadataService', () => {
     expect(result[0].platform).toBe('instagram');
     expect(result[0].followers).toBe(10);
   });
+
+  describe('enrichYouTube (Data API v3)', () => {
+    it('enriquece con stats del canal si hay API key', async () => {
+      const fetchMock = jest.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            items: [
+              {
+                statistics: {
+                  subscriberCount: '5000',
+                  viewCount: '120000',
+                  videoCount: '42',
+                },
+              },
+            ],
+          }),
+      });
+      global.fetch = fetchMock;
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          SocialMetadataService,
+          {
+            provide: ConfigService,
+            useValue: { get: jest.fn(() => 'youtube-test-key') },
+          },
+        ],
+      }).compile();
+      const svc = module.get<SocialMetadataService>(SocialMetadataService);
+
+      const enriched = await svc.enrichYouTube({
+        platform: 'youtube',
+        url: 'https://youtube.com/@luna',
+      });
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(enriched.stats).toEqual({
+        subscriberCount: '5000',
+        viewCount: '120000',
+        videoCount: '42',
+      });
+      expect(enriched.followers).toBe(5000);
+    });
+
+    it('no enriquece si la API responde error', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 403,
+      });
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          SocialMetadataService,
+          {
+            provide: ConfigService,
+            useValue: { get: jest.fn(() => 'youtube-test-key') },
+          },
+        ],
+      }).compile();
+      const svc = module.get<SocialMetadataService>(SocialMetadataService);
+
+      const enriched = await svc.enrichYouTube({
+        platform: 'youtube',
+        url: 'https://youtube.com/@luna',
+      });
+
+      expect(enriched.followers).toBeUndefined();
+      expect(enriched.stats).toBeUndefined();
+    });
+  });
 });

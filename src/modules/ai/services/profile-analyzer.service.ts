@@ -19,6 +19,10 @@ export interface AnalyzeOutcome {
   suggestions?: AiAnalysisResult;
   reasons: string[];
   degraded: boolean;
+  /** Metadata del provider que generó el resultado (solo caso A). */
+  provider?: 'groq' | 'deepseek';
+  model?: string;
+  tokenUsage?: { input: number; output: number; total: number };
 }
 
 /**
@@ -103,13 +107,14 @@ export class ProfileAnalyzerService {
         })),
       };
       const raw = await this.provider.analyze(payload);
+      let lastRaw = raw;
 
       // Validación zod (anti-alucinación) con 1 retry.
       let parsed: AiAnalysisResult | null = null;
       let lastError: Error | null = null;
       for (let attempt = 0; attempt < 2 && !parsed; attempt++) {
         try {
-          parsed = AiAnalysisResultSchema.parse(JSON.parse(raw.content));
+          parsed = AiAnalysisResultSchema.parse(JSON.parse(lastRaw.content));
         } catch (e) {
           lastError = e instanceof Error ? e : new Error(String(e));
           this.logger.warn(
@@ -119,6 +124,7 @@ export class ProfileAnalyzerService {
             // 1 retry: re-llamar al provider (el servicio ya hace fallback).
             try {
               const retry = await this.provider.analyze(payload);
+              lastRaw = retry;
               parsed = AiAnalysisResultSchema.parse(JSON.parse(retry.content));
             } catch (e2) {
               lastError = e2 instanceof Error ? e2 : new Error(String(e2));
@@ -137,6 +143,9 @@ export class ProfileAnalyzerService {
           `Máximo de followers (${max}) alcanza el umbral (${this.threshold})`,
         ],
         degraded: false,
+        provider: lastRaw.provider,
+        model: lastRaw.model,
+        tokenUsage: lastRaw.usage,
       };
     } catch (e) {
       this.logger.warn(

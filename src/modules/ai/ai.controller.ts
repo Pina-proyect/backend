@@ -6,7 +6,6 @@ import {
   HttpStatus,
   Post,
   Req,
-  ServiceUnavailableException,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -41,7 +40,7 @@ export class AiController {
     const userId = req.user.id;
     const outcome = await this.analyzer.analyze(userId, dto);
 
-    // Persistir el intento en CreatorInsight (historial).
+    // Persistir el intento en CreatorInsight (historial) con metadata real del provider.
     await this.prisma.creatorInsight.create({
       data: {
         creatorId: userId,
@@ -52,10 +51,10 @@ export class AiController {
           : JSON.stringify({ reasons: outcome.reasons }),
         metadata: {
           case: outcome.case,
-          provider: null,
-          model: null,
+          provider: outcome.provider ?? null,
+          model: outcome.model ?? null,
           language: dto.language ?? 'es',
-          tokenUsage: { input: 0, output: 0, total: 0 },
+          tokenUsage: outcome.tokenUsage ?? { input: 0, output: 0, total: 0 },
           inputSnapshot: {
             platforms: (dto.socialLinks ?? []).map((s) => ({
               platform: s.platform,
@@ -71,7 +70,27 @@ export class AiController {
       },
     });
 
-    // Caso D sin LLM disponible por falta de keys → 503 con sugerencia de flujo manual.
+    // Si el análisis completó (caso A), actualizar Creator con las sugerencias
+    // y la fecha de último análisis (REQ-INS-2: no solo al aceptar).
+    if (outcome.case === 'A' && outcome.suggestions) {
+      const s = outcome.suggestions;
+      await this.prisma.creator.update({
+        where: { id: userId },
+        data: {
+          aiSummary: s.suggestedBio,
+          aiSuggestedNiche: s.suggestedNiche,
+          aiSuggestedBio: s.suggestedBio,
+          aiSuggestedGoal: s.suggestedGoal,
+          aiSuggestedPlan: Array.isArray(s.suggestedPlan)
+            ? s.suggestedPlan.join('\n')
+            : undefined,
+          aiLastAnalyzedAt: new Date(),
+        },
+      });
+    }
+
+    // Caso D: sin LLM disponible (falta de keys) → 200 con degraded:true
+    // (el design exige caso D, no 503; el frontend muestra el flujo manual).
     if (
       outcome.case === 'D' &&
       !outcome.reasons.includes('Consentimiento no otorgado')
@@ -79,13 +98,10 @@ export class AiController {
       const hasGroq = !!process.env.GROQ_API_KEY;
       const hasDeepseek = !!process.env.DEEPSEEK_API_KEY;
       if (!hasGroq && !hasDeepseek) {
-        throw new ServiceUnavailableException({
-          statusCode: 503,
-          message:
-            'El análisis con IA no está configurado. Podés continuar con el flujo manual.',
-          code: 'AI_NOT_CONFIGURED',
-          case: 'D',
-        });
+        return {
+          ...outcome,
+          reasons: [...outcome.reasons, 'IA no configurada'],
+        };
       }
     }
 
