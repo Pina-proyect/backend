@@ -145,7 +145,7 @@ export class ProfileAnalyzerService {
         degraded: false,
         provider: lastRaw.provider,
         model: lastRaw.model,
-        tokenUsage: lastRaw.usage,
+        tokenUsage: lastRaw.usage ?? { input: 0, output: 0, total: 0 },
       };
     } catch (e) {
       this.logger.warn(
