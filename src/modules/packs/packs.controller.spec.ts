@@ -3,6 +3,7 @@ import { PacksController } from './packs.controller';
 import { PacksService } from './packs.service';
 import { PackAccessGuard } from './guards/pack-access.guard';
 import { ConfigService } from '@nestjs/config';
+import { MediaUrlResolver } from '../media/media-url.resolver';
 
 describe('PacksController', () => {
   let controller: PacksController;
@@ -26,6 +27,15 @@ describe('PacksController', () => {
         {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue(undefined) },
+        },
+        {
+          provide: MediaUrlResolver,
+          useValue: {
+            resolve: jest.fn(),
+            resolveMany: jest.fn(),
+            toPublic: jest.fn(),
+            toPublicMany: jest.fn(),
+          },
         },
         PackAccessGuard,
       ],

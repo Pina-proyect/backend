@@ -17,6 +17,7 @@ import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import { PacksService } from './packs.service';
 import { PackAccessGuard } from './guards/pack-access.guard';
+import { MediaUrlResolver } from '../media/media-url.resolver';
 import { CreatePackDto } from './dto/create-pack.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
@@ -27,6 +28,7 @@ export class PacksController {
   constructor(
     private readonly packsService: PacksService,
     private readonly configService: ConfigService,
+    private readonly urlResolver: MediaUrlResolver,
   ) {}
 
   @Post()
@@ -65,11 +67,8 @@ export class PacksController {
   async getPack(@Param('id') id: string) {
     const pack = await this.packsService.getPackById(id);
 
-    // Ocultar URLs de archivos multimedia privados para no filtrarlos públicamente
-    const publicMedia = pack.media.map((item) => ({
-      ...item,
-      url: item.isPrivate ? '' : item.url,
-    }));
+    // Público: imágenes/covers visibles; videos privados → URL en blanco.
+    const publicMedia = this.urlResolver.toPublicMany(pack.media);
 
     return {
       ...pack,
@@ -81,10 +80,12 @@ export class PacksController {
   @Get(':id/content')
   @UseGuards(AuthGuard('jwt'), PackAccessGuard)
   async getPackContent(@Param('id') id: string) {
-    // Retorna el pack completo con URLs reales si el guard autoriza el acceso
+    // Retorna el pack completo con URLs resueltas si el guard autoriza el acceso.
     const pack = await this.packsService.getPackById(id);
+    const media = await this.urlResolver.resolveMany(pack.media);
     return {
       ...pack,
+      media,
       hasAccess: true,
     };
   }

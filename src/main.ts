@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import * as cookieParser from 'cookie-parser';
 import * as express from 'express';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { MulterErrorFilter } from './common/filters/multer-error.filter';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -47,6 +48,7 @@ export async function bootstrap() {
 
   const configService = app.get(ConfigService);
   app.useGlobalFilters(new GlobalExceptionFilter(configService));
+  app.useGlobalFilters(new MulterErrorFilter());
 
   app.setGlobalPrefix('api/pina');
 
