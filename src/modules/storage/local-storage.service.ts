@@ -1,5 +1,9 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { StorageOptions, StorageProvider } from './storage.provider';
+import {
+  StorageOptions,
+  StorageProvider,
+  ResolvedUrl,
+} from './storage.provider';
 import * as fs from 'fs-extra';
 import { join } from 'path';
 
@@ -39,9 +43,9 @@ export class LocalStorageService extends StorageProvider {
     }
   }
 
-  getUrl(key: string): Promise<string> {
+  getUrl(key: string): Promise<ResolvedUrl> {
     // En local, la URL es directa si el servidor expone la carpeta /uploads
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:4000';
-    return Promise.resolve(`${backendUrl}${key}`);
+    return Promise.resolve({ url: `${backendUrl}${key}` });
   }
 }

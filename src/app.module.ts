@@ -21,6 +21,13 @@ import { CacheModule } from './common/cache/cache.module';
 import { EmailModule } from './modules/email/email.module';
 import { AiModule } from './modules/ai/ai.module';
 
+/** Driver de storage efectivo: STORAGE_DRIVER, default r2 en producción. */
+function storageDriver(): 'local' | 'r2' {
+  const explicit = process.env.STORAGE_DRIVER;
+  if (explicit === 'local' || explicit === 'r2') return explicit;
+  return process.env.NODE_ENV === 'production' ? 'r2' : 'local';
+}
+
 @Module({
   imports: [
     ThrottlerModule.forRoot({
@@ -62,12 +69,26 @@ import { AiModule } from './modules/ai/ai.module';
         AI_MONTHLY_BUDGET_USD: Joi.number().optional().allow(''),
         AI_CB_FAILURE_THRESHOLD: Joi.number().default(3),
         AI_CB_RESET_MS: Joi.number().default(30000),
+        // ── Storage R2 (Sprint 2) ─────────────────────────────
+        STORAGE_DRIVER: Joi.string().valid('local', 'r2').optional(),
+        R2_ACCOUNT_ID: Joi.string().optional().allow(''),
+        R2_ACCESS_KEY_ID: Joi.string().optional().allow(''),
+        R2_SECRET_ACCESS_KEY: Joi.string().optional().allow(''),
+        R2_BUCKET: Joi.string().optional().allow(''),
+        R2_PUBLIC_BUCKET: Joi.string().optional().allow(''),
+        R2_PUBLIC_URL: Joi.string().uri().optional().allow(''),
+        R2_ENDPOINT: Joi.string().uri().optional().allow(''),
       }),
     }),
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'uploads'),
-      serveRoot: '/uploads',
-    }),
+    // ServeStatic solo en modo local (R2 privado no debe exponer /uploads).
+    ...(storageDriver() === 'local'
+      ? [
+          ServeStaticModule.forRoot({
+            rootPath: join(process.cwd(), 'uploads'),
+            serveRoot: '/uploads',
+          }),
+        ]
+      : []),
     AuthModule,
     HealthModule,
     UsersModule,
