@@ -31,10 +31,13 @@ describe('PacksController', () => {
         {
           provide: MediaUrlResolver,
           useValue: {
-            resolve: jest.fn(),
-            resolveMany: jest.fn(),
-            toPublic: jest.fn(),
-            toPublicMany: jest.fn(),
+            resolveItem: jest.fn(),
+            resolveItems: jest.fn(),
+            toPublicItem: jest.fn(),
+            toPublicItems: jest.fn(),
+            resolvePacks: jest.fn(),
+            toPublicPacks: jest.fn(),
+            isNonPublic: jest.fn(),
           },
         },
         PackAccessGuard,
