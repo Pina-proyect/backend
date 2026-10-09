@@ -42,7 +42,7 @@ export class MediaController {
   @Get('my-content')
   async getMyContent(@Req() req: AuthenticatedRequest) {
     const media = await this.mediaService.getMediaByCreator(req.user.id);
-    return this.urlResolver.resolveMany(media);
+    return this.urlResolver.resolveItems(media);
   }
 
   @Post('delete')

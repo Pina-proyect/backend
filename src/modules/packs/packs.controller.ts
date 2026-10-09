@@ -68,7 +68,7 @@ export class PacksController {
     const pack = await this.packsService.getPackById(id);
 
     // Público: imágenes/covers visibles; videos privados → URL en blanco.
-    const publicMedia = this.urlResolver.toPublicMany(pack.media);
+    const publicMedia = this.urlResolver.toPublicItems(pack.media);
 
     return {
       ...pack,
@@ -82,7 +82,7 @@ export class PacksController {
   async getPackContent(@Param('id') id: string) {
     // Retorna el pack completo con URLs resueltas si el guard autoriza el acceso.
     const pack = await this.packsService.getPackById(id);
-    const media = await this.urlResolver.resolveMany(pack.media);
+    const media = await this.urlResolver.resolveItems(pack.media);
     return {
       ...pack,
       media,
