@@ -211,7 +211,7 @@ describe('Media delivery hardening (e2e) — REQ-SVD-3, REQ-UL-2/3', () => {
     const before = await prisma.media.count({ where: { creatorId } });
     const oversized = Buffer.alloc(11 * 1024 * 1024, 0);
 
-    await request(app.getHttpServer())
+    const res = await request(app.getHttpServer())
       .post(`${PREFIX}/media/upload`)
       .set('Authorization', `Bearer ${token}`)
       .field('title', 'imagen grande')
@@ -221,6 +221,36 @@ describe('Media delivery hardening (e2e) — REQ-SVD-3, REQ-UL-2/3', () => {
       })
       .expect(413);
 
+    // El 413 del servicio (imagen >10MB) sigue llegando en español por HTTP real.
+    expect((res.body as { message: string }).message).toContain(
+      'La imagen supera el límite de 10MB',
+    );
+    expect(uploadSpy).not.toHaveBeenCalled();
+    const after = await prisma.media.count({ where: { creatorId } });
+    expect(after).toBe(before);
+    uploadSpy.mockRestore();
+  });
+
+  it('POST /media/upload video sobredimensionada (>100MB, límite multer) → 413 con mensaje en español', async () => {
+    const uploadSpy = jest.spyOn(storage, 'upload');
+    const before = await prisma.media.count({ where: { creatorId } });
+    const oversized = Buffer.alloc(100 * 1024 * 1024 + 1, 0);
+
+    const res = await request(app.getHttpServer())
+      .post(`${PREFIX}/media/upload`)
+      .set('Authorization', `Bearer ${token}`)
+      .field('title', 'video grande')
+      .attach('file', oversized, {
+        filename: 'big.mp4',
+        contentType: 'video/mp4',
+      })
+      .expect(413);
+
+    // REQ-UL-3: el path de multer (transformException → PayloadTooLargeException)
+    // debe responder con mensaje en español, no con el "File too large" crudo.
+    expect((res.body as { message: string }).message).toContain(
+      'supera el límite de 100MB',
+    );
     expect(uploadSpy).not.toHaveBeenCalled();
     const after = await prisma.media.count({ where: { creatorId } });
     expect(after).toBe(before);
