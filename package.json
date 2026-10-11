@@ -10,6 +10,7 @@
     "db:down": "docker-compose down",
     "migrate": "prisma migrate dev",
     "migrate:r2": "ts-node scripts/migrate-r2.ts",
+    "backfill:access-type": "ts-node scripts/backfill-access-type.ts",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",

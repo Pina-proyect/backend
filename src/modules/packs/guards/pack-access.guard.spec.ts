@@ -86,6 +86,20 @@ describe('PackAccessGuard', () => {
     );
   });
 
+  it('should rethrow NotFoundException when pack is archived (getPackById throws)', async () => {
+    const context = createMockExecutionContext(
+      { id: 'user-123' },
+      { id: 'pack-123' },
+    );
+    // getPackById del service lanza 404 cuando status='archived' (spec packs-crud).
+    packsService.getPackById.mockRejectedValue(
+      new NotFoundException('Pack no encontrado'),
+    );
+
+    await expect(guard.canActivate(context)).rejects.toThrow(NotFoundException);
+    expect(packsService.hasAccess).not.toHaveBeenCalled();
+  });
+
   it('should throw ForbiddenException if user does not have access', async () => {
     const context = createMockExecutionContext(
       { id: 'user-123' },
