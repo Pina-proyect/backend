@@ -50,7 +50,9 @@ export class PacksController {
   @Get('my-packs')
   @UseGuards(AuthGuard('jwt'))
   async getMyPacks(@Req() req: AuthenticatedRequest) {
-    return this.packsService.getMyPacks(req.user.id);
+    // Dueño autenticado → proyección firmada (videos presignados, REQ-SVD-3).
+    const packs = await this.packsService.getMyPacks(req.user.id);
+    return this.urlResolver.resolvePacks(packs);
   }
 
   @Get('categories')
@@ -60,7 +62,9 @@ export class PacksController {
 
   @Get('public/:slug')
   async getCreatorPacks(@Param('slug') slug: string) {
-    return this.packsService.getPacksByCreatorSlug(slug);
+    // Público → proyección pública (videos blanqueados, REQ-SVD-3).
+    const packs = await this.packsService.getPacksByCreatorSlug(slug);
+    return this.urlResolver.toPublicPacks(packs);
   }
 
   @Get(':id')
