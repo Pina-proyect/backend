@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
   PayloadTooLargeException,
+  UnsupportedMediaTypeException,
 } from '@nestjs/common';
 import { StorageProvider } from '../storage/storage.provider';
 import { PrismaService } from 'prisma/prisma.service';
@@ -39,7 +40,7 @@ export class MediaService {
       const type = file.mimetype.startsWith('video/') ? 'video' : 'image';
       const allowed = type === 'video' ? VIDEO_MIMES : IMAGE_MIMES;
       if (!allowed.includes(file.mimetype)) {
-        throw new InternalServerErrorException(
+        throw new UnsupportedMediaTypeException(
           type === 'video'
             ? 'Formato de video no permitido. Usá MP4 o WebM.'
             : 'Formato de imagen no permitido. Usá JPG, PNG, WebP o GIF.',
@@ -76,7 +77,8 @@ export class MediaService {
       console.error('Error saving media:', error);
       if (
         error instanceof PayloadTooLargeException ||
-        error instanceof InternalServerErrorException
+        error instanceof InternalServerErrorException ||
+        error instanceof UnsupportedMediaTypeException
       ) {
         throw error;
       }
