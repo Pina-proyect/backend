@@ -1,13 +1,23 @@
 import {
+  Controller,
   HttpStatus,
+  Post,
+  PayloadTooLargeException,
   UnsupportedMediaTypeException,
+  UseInterceptors,
   type ArgumentsHost,
+  type INestApplication,
 } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ConfigService } from '@nestjs/config';
 import { MulterError } from 'multer';
+import * as request from 'supertest';
 import { MediaController, mediaFileFilter } from './media.controller';
 import { MediaService, VIDEO_MIMES, IMAGE_MIMES } from './media.service';
 import { MediaUrlResolver } from './media-url.resolver';
 import { MulterErrorFilter } from '../../common/filters/multer-error.filter';
+import { GlobalExceptionFilter } from '../../common/filters/global-exception.filter';
 import { AuthenticatedRequest } from '../../common/types/authenticated-request';
 
 /** Ejecuta mediaFileFilter con un mimetype y captura la llamada al callback. */
@@ -80,6 +90,100 @@ describe('MediaController upload (REQ-UL-3)', () => {
           message: 'El archivo supera el límite de 100MB.',
           code: 'LIMIT_FILE_SIZE',
         }),
+      );
+    });
+
+    it('mapea PayloadTooLargeException de multer ("File too large") a 413 en español', () => {
+      // NestJS transformException convierte LIMIT_FILE_SIZE en
+      // PayloadTooLargeException('File too large') ANTES de los filtros globales.
+      const filter = new MulterErrorFilter();
+      const json = jest.fn();
+      const status = jest.fn().mockReturnValue({ json });
+      const host = {
+        switchToHttp: () => ({
+          getResponse: () => ({ status }),
+        }),
+      } as unknown as ArgumentsHost;
+
+      filter.catch(new PayloadTooLargeException('File too large'), host);
+
+      expect(status).toHaveBeenCalledWith(HttpStatus.PAYLOAD_TOO_LARGE);
+      expect(json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 413,
+          message: 'El archivo supera el límite de 100MB.',
+        }),
+      );
+    });
+
+    it('preserva el 413 con mensaje en español del servicio (imagen >10MB)', () => {
+      // El service ya lanza PayloadTooLargeException con mensaje en español;
+      // el filtro NO debe reescribirlo ni degradar el status.
+      const filter = new MulterErrorFilter();
+      const json = jest.fn();
+      const status = jest.fn().mockReturnValue({ json });
+      const host = {
+        switchToHttp: () => ({
+          getResponse: () => ({ status }),
+        }),
+      } as unknown as ArgumentsHost;
+
+      filter.catch(
+        new PayloadTooLargeException('La imagen supera el límite de 10MB.'),
+        host,
+      );
+
+      expect(status).toHaveBeenCalledWith(HttpStatus.PAYLOAD_TOO_LARGE);
+      expect(json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 413,
+          message: 'La imagen supera el límite de 10MB.',
+        }),
+      );
+    });
+  });
+
+  describe('wiring real: FileInterceptor + filtros globales de main.ts', () => {
+    // Reproduce el probe de verify (WARNING-1): un controller con límite chico
+    // ejercita el path real → transformException → PayloadTooLargeException → filtros.
+    let app: INestApplication;
+
+    @Controller('probe')
+    class OversizeProbeController {
+      @Post('oversize')
+      @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 2048 } }))
+      upload() {
+        return { ok: true };
+      }
+    }
+
+    beforeAll(async () => {
+      const moduleRef = await Test.createTestingModule({
+        controllers: [OversizeProbeController],
+      }).compile();
+
+      app = moduleRef.createNestApplication();
+      // Mismo wiring global que main.ts.
+      app.useGlobalFilters(new GlobalExceptionFilter(new ConfigService()));
+      app.useGlobalFilters(new MulterErrorFilter());
+      await app.init();
+    });
+
+    afterAll(async () => {
+      await app.close();
+    });
+
+    it('POST con archivo > límite → 413 con mensaje en español (no "File too large")', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/probe/oversize')
+        .attach('file', Buffer.alloc(4096, 0), {
+          filename: 'big.png',
+          contentType: 'image/png',
+        })
+        .expect(HttpStatus.PAYLOAD_TOO_LARGE);
+
+      expect((res.body as { message: string }).message).toContain(
+        'supera el límite de 100MB',
       );
     });
   });
