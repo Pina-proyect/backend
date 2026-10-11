@@ -51,3 +51,12 @@ Chain strategy: stacked-to-main
 - [x] 5.1 Create `test/packs.e2e-spec.ts` (supertest): PATCH/DELETE 200/403/404/204; `GET :id` `hasAccess` anonymous/buyer/owner.
 - [x] 5.2 `src/modules/packs/guards/pack-access.guard.spec.ts`: archived pack → 404.
 - [x] 5.3 Run `pnpm test`, `pnpm test:e2e`, `pnpm build` green; confirm each spec scenario.
+
+## Remediación post-verify (2026-10-11, sdd-apply)
+
+Cierre de los 3 escenarios sin test señalados por sdd-verify (cobertura, no defectos: todos los tests pasaron GREEN a la primera, sin tocar implementación).
+
+- [x] R.1 e2e `test/packs.e2e-spec.ts`: `it.each` payload inválido → 400 ValidationPipe (`price:-1`, `categoryId:'no-uuid'`, `status:'invalido'`); cierra escenario "Payload inválido" de packs-crud REQ-1.
+- [x] R.2 `src/modules/users/services/users.service.spec.ts` (nuevo): `getLibrary` consulta con `orderBy:{createdAt:'desc'}` y preserva el orden; cierra escenario "Usuario con packs comprados" de packs-unlock REQ-4.
+- [x] R.3 mismo spec: `getLibrary` devuelve `[]` sin accesos + e2e `200 []` en `test/packs.e2e-spec.ts` (usuario sin compras); cierra escenario "Usuario sin compras" de packs-unlock REQ-4.
+- [x] R.4 Re-ejecución completa verde: `pnpm test` 25/148, `pnpm test:e2e` 4/36, `pnpm build` exit 0 → verify-report actualizado a 23/23 (veredicto pass, remediated).

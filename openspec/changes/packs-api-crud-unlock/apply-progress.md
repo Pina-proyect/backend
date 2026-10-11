@@ -107,3 +107,21 @@ Ninguno. Se mantienen los avisos conocidos: `console.error` intencional en `medi
 ## Siguiente Paso Recomendado
 
 - Ejecutar **sdd-verify** sobre el cambio completo (U1 commiteada + U3 sin commitear): re-correr `pnpm test`, `pnpm test:e2e` completo (incluye `media.e2e-spec.ts` ajeno) y la verificación runtime `GET :id` con/sin JWT sobre stack levantado. Luego sdd-archive tras merge de PRs.
+
+## Remediación post-verify (2026-10-11)
+
+sdd-verify quedó `fail` por 3 escenarios sin test (2 PARTIAL + 1 UNTESTED, sin defectos de implementación). Este pase de sdd-apply cerró la cobertura sin tocar implementación (todos los tests GREEN a la primera):
+
+1. **Payload inválido → 400 ValidationPipe** (packs-crud REQ-1): e2e `it.each` con `price:-1` / `categoryId:'no-uuid'` / `status:'invalido'` → 400, en `test/packs.e2e-spec.ts` (L211-230). Suite packs e2e: 16 → 21 tests.
+2. **Orden `createdAt desc` de `GET /users/library`** (packs-unlock REQ-4): nuevo `src/modules/users/services/users.service.spec.ts` — `getLibrary` consulta con `orderBy:{createdAt:'desc'}` y preserva el orden del mapeo (+3 tests unit; suite total 24 → 25).
+3. **Usuario sin compras → 200 []** (packs-unlock REQ-4): spec de servicio `devuelve []` (mismo archivo, L86) + e2e `200 []: el usuario sin compras recibe lista vacía` (`test/packs.e2e-spec.ts` L342, usuario `stranger` sin Access).
+
+**Resultados finales** (3 corridas consecutivas verdes, determinista):
+
+| Comando | Resultado | Delta vs veredicto original |
+|---------|-----------|------------------------------|
+| `pnpm test` | 25 suites / 148 tests PASS | 24/145 → 25/148 |
+| `pnpm test:e2e` | 4 suites / 36 tests PASS | 4/31 → 4/36 (packs 16 → 21) |
+| `pnpm build` | exit 0 | hash output idéntico (`9aba080a…`) |
+
+`verify-report.md` actualizado: veredicto `pass` (remediated), 23/23 escenarios COMPLIANT. Sin commit (working tree limpio salvo tooling untracked). No se tocaron archivos de la sesión paralela (media).
