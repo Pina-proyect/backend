@@ -1,0 +1,53 @@
+# OpenSpec project config — PINA backend (worktree: backend-dev)
+schema: spec-driven
+
+context: |
+  PINA backend — NestJS 11 API for a micro-influencer / creator platform.
+  Stack: TypeScript, NestJS 11, Prisma 6 + PostgreSQL, Redis (ioredis), JWT + Google OAuth.
+  Package manager: pnpm (pnpm-lock.yaml v9 + pnpm-workspace.yaml; yarn.lock is stale).
+  Feature modules under src/modules/<name>/ (controller + service + dto).
+  Global API prefix /api/pina. Global ValidationPipe (whitelist + forbidNonWhitelisted).
+  Tests: Jest unit (*.spec.ts) + Jest/supertest e2e (test/*.e2e-spec.ts).
+  Worktree-local OpenSpec store on git branch etrigan16/backend-dev.
+  Language: all SDD artifacts (proposal, specs, design, tasks, apply-progress, verify-report)
+  and status/report responses are written in neutral, professional Spanish.
+  Code identifiers and API names stay in English; only prose and artifacts are Spanish.
+
+strict_tdd: true
+
+testing:
+  package_manager: pnpm
+  unit: "pnpm test (jest, rootDir src, *.spec.ts)"
+  watch: "pnpm test:watch"
+  e2e: "pnpm test:e2e (jest --config ./test/jest-e2e.json, *.e2e-spec.ts)"
+  coverage: "pnpm test:cov (jest --coverage)"
+  lint: "pnpm lint (eslint --fix) / pnpm lint:security (check-only)"
+  typecheck: "pnpm build (nest build) / pnpm exec tsc --noEmit"
+  format: "pnpm format (prettier)"
+  prisma: "pnpm exec prisma generate / pnpm exec prisma migrate deploy"
+
+rules:
+  proposal:
+    - Include intent, scope, approach, and rollback plan for risky changes
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Document architecture decisions with rationale
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+  apply:
+    guidelines:
+      - Follow existing NestJS module patterns (controller -> service -> repository/provider)
+      - Backend modules under src/modules/<name>/; cross-cutting code in src/common/
+      - Validate DTOs with class-validator; global whitelist + forbidNonWhitelisted
+      - Prettier single quotes + trailing commas
+    tdd: true
+    test_command: "pnpm test"
+  verify:
+    test_command: "pnpm test"
+    build_command: "pnpm build"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas

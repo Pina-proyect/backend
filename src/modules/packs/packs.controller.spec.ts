@@ -5,7 +5,10 @@ import { PackAccessGuard } from './guards/pack-access.guard';
 import { ConfigService } from '@nestjs/config';
 import { MediaUrlResolver } from '../media/media-url.resolver';
 import { StorageProvider } from '../storage/storage.provider';
-import { AuthenticatedRequest } from '../../common/types/authenticated-request';
+import {
+  AuthenticatedRequest,
+  OptionalAuthenticatedRequest,
+} from '../../common/types/authenticated-request';
 import type { Media } from '@prisma/client';
 
 /** Pack con la media ya proyectada por el endpoint (REQ-SVD-5). */
@@ -56,6 +59,8 @@ describe('PacksController', () => {
     getAllCategories: jest.Mock;
     getPacksByCreatorSlug: jest.Mock;
     getPackById: jest.Mock;
+    updatePack: jest.Mock;
+    deletePack: jest.Mock;
     grantAccess: jest.Mock;
     hasAccess: jest.Mock;
   };
@@ -68,6 +73,8 @@ describe('PacksController', () => {
       getAllCategories: jest.fn(),
       getPacksByCreatorSlug: jest.fn(),
       getPackById: jest.fn(),
+      updatePack: jest.fn(),
+      deletePack: jest.fn(),
       grantAccess: jest.fn(),
       hasAccess: jest.fn(),
     };
@@ -154,17 +161,80 @@ describe('PacksController', () => {
     });
   });
 
-  describe('GET /packs/:id (proyección pública)', () => {
+  describe('GET /packs/:id (proyección pública + hasAccess)', () => {
+    const anonymous = {} as OptionalAuthenticatedRequest;
+
     it('blanquea el video y conserva la portada', async () => {
       packsService.getPackById.mockResolvedValue({
         id: 'p1',
         media: [makeMedia(), makeImage()],
       });
 
-      const result = await controller.getPack('p1');
+      const result = await controller.getPack('p1', anonymous);
 
       expect(result.media[0].url).toBe('');
       expect(result.media[1].url).toBe('https://pub.test/media/i1.png');
+    });
+
+    it('request anónimo → hasAccess false sin consultar acceso', async () => {
+      packsService.getPackById.mockResolvedValue({ id: 'p1', media: [] });
+
+      const result = await controller.getPack('p1', anonymous);
+
+      expect(result.hasAccess).toBe(false);
+      expect(packsService.hasAccess).not.toHaveBeenCalled();
+    });
+
+    it('usuario autenticado con acceso → hasAccess true', async () => {
+      packsService.getPackById.mockResolvedValue({ id: 'p1', media: [] });
+      packsService.hasAccess.mockResolvedValue(true);
+
+      const result = await controller.getPack('p1', {
+        user: { id: 'buyer-1' },
+      } as OptionalAuthenticatedRequest);
+
+      expect(result.hasAccess).toBe(true);
+      expect(packsService.hasAccess).toHaveBeenCalledWith('buyer-1', 'p1');
+    });
+
+    it('usuario autenticado sin acceso → hasAccess false', async () => {
+      packsService.getPackById.mockResolvedValue({ id: 'p1', media: [] });
+      packsService.hasAccess.mockResolvedValue(false);
+
+      const result = await controller.getPack('p1', {
+        user: { id: 'other-1' },
+      } as OptionalAuthenticatedRequest);
+
+      expect(result.hasAccess).toBe(false);
+      expect(packsService.hasAccess).toHaveBeenCalledWith('other-1', 'p1');
+    });
+  });
+
+  describe('PATCH /packs/:id', () => {
+    it('delega en el service con el id del usuario autenticado', async () => {
+      packsService.updatePack.mockResolvedValue({ id: 'p1' });
+      const dto = { title: 'Nuevo' };
+
+      const result = await controller.updatePack(
+        'p1',
+        dto,
+        { user: { id: 'u1' } } as AuthenticatedRequest,
+      );
+
+      expect(packsService.updatePack).toHaveBeenCalledWith('u1', 'p1', dto);
+      expect(result).toEqual({ id: 'p1' });
+    });
+  });
+
+  describe('DELETE /packs/:id', () => {
+    it('delega el soft-delete con el id del usuario autenticado', async () => {
+      packsService.deletePack.mockResolvedValue(undefined);
+
+      await controller.deletePack('p1', {
+        user: { id: 'u1' },
+      } as AuthenticatedRequest);
+
+      expect(packsService.deletePack).toHaveBeenCalledWith('u1', 'p1');
     });
   });
 
