@@ -21,6 +21,7 @@ function makeMedia(overrides: Partial<Media> = {}): Media {
     mimetype: 'video/mp4',
     size: 1024,
     isPrivate: true,
+    visibility: null,
     createdAt: now,
     updatedAt: now,
     ...overrides,
