@@ -17,11 +17,16 @@ import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import { PacksService } from './packs.service';
 import { PackAccessGuard } from './guards/pack-access.guard';
+import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt.guard';
 import { MediaUrlResolver } from '../media/media-url.resolver';
 import { CreatePackDto } from './dto/create-pack.dto';
+import { UpdatePackDto } from './dto/update-pack.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
-import { AuthenticatedRequest } from '../../common/types/authenticated-request';
+import {
+  AuthenticatedRequest,
+  OptionalAuthenticatedRequest,
+} from '../../common/types/authenticated-request';
 
 @Controller('packs')
 export class PacksController {
@@ -67,17 +72,47 @@ export class PacksController {
     return this.urlResolver.toPublicPacks(packs);
   }
 
+  @Patch(':id')
+  @UseGuards(AuthGuard('jwt'))
+  async updatePack(
+    @Param('id') id: string,
+    @Body() dto: UpdatePackDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.packsService.updatePack(req.user.id, id, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deletePack(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    await this.packsService.deletePack(req.user.id, id);
+  }
+
   @Get(':id')
-  async getPack(@Param('id') id: string) {
+  @UseGuards(OptionalJwtAuthGuard)
+  async getPack(
+    @Param('id') id: string,
+    @Req() req: OptionalAuthenticatedRequest,
+  ) {
     const pack = await this.packsService.getPackById(id);
 
     // Público: imágenes/covers visibles; videos privados → URL en blanco.
     const publicMedia = this.urlResolver.toPublicItems(pack.media);
 
+    // Auth opcional: anónimo → false; autenticado → hasAccess real (owner/Access).
+    const userId = req.user?.id;
+    const hasAccess = userId
+      ? await this.packsService.hasAccess(userId, id)
+      : false;
+
     return {
       ...pack,
       media: publicMedia,
-      hasAccess: false,
+      hasAccess,
     };
   }
 
