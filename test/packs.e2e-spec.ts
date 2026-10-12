@@ -9,10 +9,13 @@ import { GlobalExceptionFilter } from './../src/common/filters/global-exception.
 
 /**
  * E2E de packs CRUD + unlock (specs packs-crud y packs-unlock):
- * - PATCH /packs/:id: 200 owner, 403 no-owner, 404 inexistente/archivado, 400 body vacío, 401 sin token.
+ * - PATCH /packs/:id: 200 owner, 403 no-owner, 404 inexistente/archivado, 400 body vacío,
+ *   400 payload inválido (ValidationPipe: price<0.01 / categoryId no-UUID / status fuera del enum),
+ *   401 sin token.
  * - DELETE /packs/:id: 204 soft-delete idempotente, 403 no-owner, 404 inexistente.
  * - GET /packs/:id: hasAccess false anónimo, true comprador/propietario, false sin acceso,
  *   token inválido → anónimo, 404 si archivado.
+ * - GET /users/library: 200 con packs del comprador, 200 [] sin compras (packs-unlock REQ-4).
  *
  * Harness: AppModule real + Postgres real (DATABASE_URL) + Redis; ver `test/jest-e2e.json`.
  */
@@ -205,6 +208,27 @@ describe('Packs CRUD + unlock (e2e)', () => {
         .expect(400);
     });
 
+    it.each([
+      { label: 'price negativo', body: { title: 'x', price: -1 } },
+      {
+        label: 'categoryId no-UUID',
+        body: { title: 'x', categoryId: 'no-uuid' },
+      },
+      {
+        label: 'status fuera del enum',
+        body: { title: 'x', status: 'invalido' },
+      },
+    ])(
+      '400: payload inválido ($label) → rechazado por el ValidationPipe global',
+      async ({ body }: { body: Record<string, unknown> }) => {
+        await request(app.getHttpServer())
+          .patch(`${PREFIX}/packs/${packId}`)
+          .set('Authorization', `Bearer ${ownerToken}`)
+          .send(body)
+          .expect(400);
+      },
+    );
+
     it('401: sin token', async () => {
       await request(app.getHttpServer())
         .patch(`${PREFIX}/packs/${packId}`)
@@ -300,6 +324,28 @@ describe('Packs CRUD + unlock (e2e)', () => {
         .get(`${PREFIX}/packs/${archivedPackId}`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .expect(404);
+    });
+  });
+
+  describe('GET /users/library — purchasedPacks (fuente única)', () => {
+    it('200: el usuario con compras recibe sus packs', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`${PREFIX}/users/library`)
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .expect(200);
+
+      const body = res.body as Array<{ id: string }>;
+      expect(Array.isArray(body)).toBe(true);
+      expect(body.some((p) => p.id === packId)).toBe(true);
+    });
+
+    it('200 []: el usuario sin compras recibe lista vacía', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`${PREFIX}/users/library`)
+        .set('Authorization', `Bearer ${strangerToken}`)
+        .expect(200);
+
+      expect(res.body).toEqual([]);
     });
   });
 });
