@@ -34,6 +34,7 @@ function makeMedia(overrides: Partial<Media> = {}): Media {
     mimetype: 'video/mp4',
     size: 1024,
     isPrivate: true,
+    visibility: null,
     createdAt: now,
     updatedAt: now,
     ...overrides,
@@ -215,11 +216,9 @@ describe('PacksController', () => {
       packsService.updatePack.mockResolvedValue({ id: 'p1' });
       const dto = { title: 'Nuevo' };
 
-      const result = await controller.updatePack(
-        'p1',
-        dto,
-        { user: { id: 'u1' } } as AuthenticatedRequest,
-      );
+      const result = await controller.updatePack('p1', dto, {
+        user: { id: 'u1' },
+      } as AuthenticatedRequest);
 
       expect(packsService.updatePack).toHaveBeenCalledWith('u1', 'p1', dto);
       expect(result).toEqual({ id: 'p1' });
