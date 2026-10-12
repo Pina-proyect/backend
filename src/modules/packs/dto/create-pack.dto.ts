@@ -7,6 +7,7 @@ import {
   IsUUID,
   Min,
 } from 'class-validator';
+import { IsMediaVisibility, MediaVisibility } from './media-visibility';
 
 export class CreatePackDto {
   @IsString()
@@ -27,4 +28,10 @@ export class CreatePackDto {
   @IsArray()
   @IsUUID('4', { each: true })
   mediaIds: string[];
+
+  // Opcional y aditivo: visibilidad por media (`preview` público / `exclusive`).
+  // No altera `mediaIds`; el service valida la pertenencia de cada media.
+  @IsOptional()
+  @IsMediaVisibility()
+  mediaVisibility?: Record<string, MediaVisibility>;
 }

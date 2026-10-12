@@ -203,6 +203,9 @@ model Media {
 
   // Para control de visibilidad
   isPrivate Boolean @default(true)
+  // Visibilidad en contexto de pack: null (legacy, preserva comportamiento),
+  // 'preview' (elegible para proyección pública) o 'exclusive' (solo firmada).
+  visibility String?
 
   // Relación con los paquetes que contienen este medio (M:N)
   packs ContentPack[] @relation("PackMedia")

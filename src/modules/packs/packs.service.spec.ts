@@ -21,6 +21,7 @@ describe('PacksService', () => {
     },
     media: {
       count: jest.fn(),
+      update: jest.fn(),
     },
     category: {
       findMany: jest.fn(),
@@ -145,6 +146,82 @@ describe('PacksService', () => {
           }),
         }),
       );
+    });
+
+    it('persiste la visibilidad por media y valida pertenencia al creador', async () => {
+      prisma.contentPack.findUnique.mockResolvedValue(activePack);
+      prisma.media.count.mockResolvedValue(1);
+      prisma.contentPack.update.mockResolvedValue({ id: 'pack-1', media: [] });
+
+      await service.updatePack('owner-1', 'pack-1', {
+        mediaVisibility: { m1: 'exclusive' },
+      });
+
+      expect(prisma.media.count).toHaveBeenCalledWith({
+        where: { id: { in: ['m1'] }, creatorId: 'owner-1' },
+      });
+      expect(prisma.media.update).toHaveBeenCalledWith({
+        where: { id: 'm1' },
+        data: { visibility: 'exclusive' },
+      });
+    });
+
+    it('lanza 403 si la visibilidad referencia media ajena', async () => {
+      prisma.contentPack.findUnique.mockResolvedValue(activePack);
+      prisma.media.count.mockResolvedValue(0);
+
+      await expect(
+        service.updatePack('owner-1', 'pack-1', {
+          mediaVisibility: { m2: 'preview' },
+        }),
+      ).rejects.toThrow(ForbiddenException);
+      expect(prisma.media.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('createPack', () => {
+    const createData = {
+      title: 'Pack',
+      price: 10,
+      categoryId: 'cat-1',
+      mediaIds: ['m1'],
+    };
+
+    it('persiste la visibilidad por media al crear', async () => {
+      prisma.media.count.mockResolvedValue(1);
+      prisma.contentPack.create.mockResolvedValue({ id: 'pack-1', media: [] });
+
+      await service.createPack('owner-1', {
+        ...createData,
+        mediaVisibility: { m1: 'exclusive' },
+      });
+
+      expect(prisma.media.update).toHaveBeenCalledWith({
+        where: { id: 'm1' },
+        data: { visibility: 'exclusive' },
+      });
+    });
+
+    it('no toca media.update cuando no se envía visibilidad', async () => {
+      prisma.media.count.mockResolvedValue(1);
+      prisma.contentPack.create.mockResolvedValue({ id: 'pack-1', media: [] });
+
+      await service.createPack('owner-1', createData);
+
+      expect(prisma.media.update).not.toHaveBeenCalled();
+    });
+
+    it('lanza 403 si la visibilidad referencia media ajena y no crea el pack', async () => {
+      // primera llamada (mediaIds del pack) ok; segunda (claves de visibilidad) falla
+      prisma.media.count.mockResolvedValueOnce(1).mockResolvedValueOnce(0);
+
+      await expect(
+        service.createPack('owner-1', {
+          ...createData,
+          mediaVisibility: { m2: 'preview' },
+        }),
+      ).rejects.toThrow(ForbiddenException);
+      expect(prisma.contentPack.create).not.toHaveBeenCalled();
     });
   });
 

@@ -8,6 +8,7 @@ import {
   IsUUID,
   Min,
 } from 'class-validator';
+import { IsMediaVisibility, MediaVisibility } from './media-visibility';
 
 /** Estados válidos de un ContentPack (enum de negocio). */
 export const PACK_STATUSES = ['active', 'hidden', 'archived'] as const;
@@ -40,6 +41,11 @@ export class UpdatePackDto {
   @IsArray()
   @IsUUID('4', { each: true })
   mediaIds?: string[];
+
+  // Opcional y aditivo: visibilidad por media (`preview` / `exclusive`).
+  @IsOptional()
+  @IsMediaVisibility()
+  mediaVisibility?: Record<string, MediaVisibility>;
 
   @IsOptional()
   @IsIn(PACK_STATUSES)

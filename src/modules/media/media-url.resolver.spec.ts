@@ -19,6 +19,7 @@ function makeMedia(overrides: Partial<Media> = {}): Media {
     mimetype: 'video/mp4',
     size: 1024,
     isPrivate: true,
+    visibility: null,
     createdAt: now,
     updatedAt: now,
     ...overrides,
@@ -142,6 +143,95 @@ describe('MediaUrlResolver', () => {
 
       expect(result[0].url).toBe('');
       expect(result[1].url).toBe('https://pub.test/media/i1.png');
+    });
+  });
+
+  describe('proyección pública por visibilidad (REQ-SVD-3)', () => {
+    it('blanquea la url de una imagen exclusive', () => {
+      const image = makeMedia({
+        id: 'i-excl',
+        type: 'image',
+        url: 'https://pub.test/media/i-excl.png',
+        isPrivate: false,
+        visibility: 'exclusive',
+      });
+
+      const result = resolver.toPublicItem(image);
+
+      expect(result.url).toBe('');
+    });
+
+    it('conserva la url pública de una imagen preview', () => {
+      const image = makeMedia({
+        id: 'i-prev',
+        type: 'image',
+        url: 'https://pub.test/media/i-prev.png',
+        isPrivate: false,
+        visibility: 'preview',
+      });
+
+      const result = resolver.toPublicItem(image);
+
+      expect(result.url).toBe('https://pub.test/media/i-prev.png');
+    });
+
+    it('preserva el comportamiento actual cuando la visibilidad es null', () => {
+      const image = makeMedia({
+        id: 'i-null',
+        type: 'image',
+        url: 'https://pub.test/media/i-null.png',
+        isPrivate: false,
+        visibility: null,
+      });
+      const video = makeMedia({ id: 'v-null', visibility: null });
+
+      expect(resolver.toPublicItem(image).url).toBe(
+        'https://pub.test/media/i-null.png',
+      );
+      expect(resolver.toPublicItem(video).url).toBe('');
+    });
+
+    it('blanquea un video exclusive (nunca público)', () => {
+      const video = makeMedia({ visibility: 'exclusive' });
+
+      const result = resolver.toPublicItem(video);
+
+      expect(result.url).toBe('');
+    });
+
+    it('proyecta listas con exclusive y preview', () => {
+      const exclusive = makeMedia({
+        id: 'i-excl',
+        type: 'image',
+        url: 'https://pub.test/e.png',
+        isPrivate: false,
+        visibility: 'exclusive',
+      });
+      const preview = makeMedia({
+        id: 'i-prev',
+        type: 'image',
+        url: 'https://pub.test/p.png',
+        isPrivate: false,
+        visibility: 'preview',
+      });
+
+      const result = resolver.toPublicItems([exclusive, preview]);
+
+      expect(result[0].url).toBe('');
+      expect(result[1].url).toBe('https://pub.test/p.png');
+    });
+
+    it('la proyección firmada sigue firmando un video exclusive con expiresAt', async () => {
+      storage.getUrl.mockResolvedValue({
+        url: 'https://r2.test/signed',
+        expiresAt: '2030-01-01T00:00:00.000Z',
+      });
+      const video = makeMedia({ visibility: 'exclusive' });
+
+      const result = await resolver.resolveItem(video);
+
+      expect(result.url).toBe('https://r2.test/signed');
+      expect(result.expiresAt).toBe('2030-01-01T00:00:00.000Z');
     });
   });
 

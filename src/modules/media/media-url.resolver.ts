@@ -46,12 +46,18 @@ export class MediaUrlResolver {
   }
 
   /**
-   * Proyección pública de un media: los videos (y cualquier object key crudo,
-   * por si `isPrivate` fuera false) se blanquean; las portadas de imagen
-   * públicas pasan tal cual (REQ-SVD-3).
+   * Proyección pública de un media (REQ-SVD-3): se blanquea la url cuando el
+   * media es `exclusive` (cualquier tipo), es un video, o su url es un object
+   * key crudo (por si `isPrivate` fuera false). Las portadas de imagen
+   * `preview`/`null` con url pública pasan tal cual. La ausencia de visibilidad
+   * (`null`) preserva el comportamiento previo.
    */
   toPublicItem(media: Media): Media {
-    if (media.type === 'video' || this.isNonPublic(media.url)) {
+    if (
+      media.visibility === 'exclusive' ||
+      media.type === 'video' ||
+      this.isNonPublic(media.url)
+    ) {
       return { ...media, url: '' };
     }
     return { ...media };

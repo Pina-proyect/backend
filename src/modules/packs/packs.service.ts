@@ -8,6 +8,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
 import { CacheService } from '../../common/cache/cache.service';
 import { UpdatePackDto } from './dto/update-pack.dto';
+import { MediaVisibility } from './dto/media-visibility';
 
 @Injectable()
 export class PacksService {
@@ -15,6 +16,38 @@ export class PacksService {
     private readonly prisma: PrismaService,
     private readonly cache: CacheService,
   ) {}
+
+  /**
+   * Aplica la visibilidad por media (`preview`/`exclusive`) a las filas `Media`,
+   * validando primero que cada media pertenezca al creador (REQ-SVD-3, D3).
+   * Aditivo: sin `mediaVisibility` no toca ninguna fila.
+   */
+  private async applyMediaVisibility(
+    creatorId: string,
+    mediaVisibility?: Record<string, MediaVisibility>,
+  ): Promise<void> {
+    if (!mediaVisibility) return;
+    const mediaIds = Object.keys(mediaVisibility);
+    if (mediaIds.length === 0) return;
+
+    const mediaCount = await this.prisma.media.count({
+      where: { id: { in: mediaIds }, creatorId },
+    });
+    if (mediaCount !== mediaIds.length) {
+      throw new ForbiddenException(
+        'Algunos archivos no pertenecen a tu cuenta o no existen',
+      );
+    }
+
+    await Promise.all(
+      mediaIds.map((id) =>
+        this.prisma.media.update({
+          where: { id },
+          data: { visibility: mediaVisibility[id] },
+        }),
+      ),
+    );
+  }
 
   async createPack(
     creatorId: string,
@@ -24,6 +57,7 @@ export class PacksService {
       price: number;
       categoryId: string;
       mediaIds: string[];
+      mediaVisibility?: Record<string, MediaVisibility>;
     },
   ) {
     // Verificar que todos los medios pertenecen al creador
@@ -39,6 +73,9 @@ export class PacksService {
         'Algunos archivos no pertenecen a tu cuenta o no existen',
       );
     }
+
+    // Persistir visibilidad antes del create para que el include la refleje.
+    await this.applyMediaVisibility(creatorId, data.mediaVisibility);
 
     return this.prisma.contentPack.create({
       data: {
@@ -120,6 +157,9 @@ export class PacksService {
       }
       data.media = { set: dto.mediaIds.map((id) => ({ id })) };
     }
+
+    // Persistir visibilidad antes del update para que el include la refleje.
+    await this.applyMediaVisibility(creatorId, dto.mediaVisibility);
 
     return this.prisma.contentPack.update({
       where: { id: packId },
