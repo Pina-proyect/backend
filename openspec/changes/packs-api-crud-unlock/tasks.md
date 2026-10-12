@@ -40,14 +40,14 @@ Chain strategy: stacked-to-main
 
 ## Phase 4: Unlock Persistence
 
-- [ ] 4.1 RED `src/modules/payments/payments.service.spec.ts` (fetch mocked): approved PACK creates `Access type='purchase'`; duplicate `findFirst` → skip; rejected/pending → no Access.
-- [ ] 4.2 `payments.service.ts` (~365): `type:'PACK'` → `type:'purchase'` (preserve DONATION flow).
-- [ ] 4.3 Create `scripts/backfill-access-type.ts`: `updateMany({where:{type:'PACK'},data:{type:'purchase'}})`, count before/after, re-runnable (pattern `scripts/migrate-r2.ts`).
-- [ ] 4.4 RED `scripts/backfill-access-type.spec.ts`: only `'PACK'` changed; `purchase`/`gift`/`subscription` untouched.
-- [ ] 4.5 `package.json`: add `"backfill:access-type": "ts-node scripts/backfill-access-type.ts"`.
+- [x] 4.1 RED `src/modules/payments/payments.service.spec.ts` (fetch mocked): approved PACK creates `Access type='purchase'`; duplicate `findFirst` → skip; rejected/pending → no Access.
+- [x] 4.2 `payments.service.ts` (~365): `type:'PACK'` → `type:'purchase'` (preserve DONATION flow).
+- [x] 4.3 Create `scripts/backfill-access-type.ts`: `updateMany({where:{type:'PACK'},data:{type:'purchase'}})`, count before/after, re-runnable (pattern `scripts/migrate-r2.ts`).
+- [x] 4.4 RED `scripts/backfill-access-type.spec.ts`: only `'PACK'` changed; `purchase`/`gift`/`subscription` untouched.
+- [x] 4.5 `package.json`: add `"backfill:access-type": "ts-node scripts/backfill-access-type.ts"`.
 
 ## Phase 5: E2E + Verification
 
-- [ ] 5.1 Create `test/packs.e2e-spec.ts` (supertest): PATCH/DELETE 200/403/404/204; `GET :id` `hasAccess` anonymous/buyer/owner.
-- [ ] 5.2 `src/modules/packs/guards/pack-access.guard.spec.ts`: archived pack → 404.
-- [ ] 5.3 Run `pnpm test`, `pnpm test:e2e`, `pnpm build` green; confirm each spec scenario.
+- [x] 5.1 Create `test/packs.e2e-spec.ts` (supertest): PATCH/DELETE 200/403/404/204; `GET :id` `hasAccess` anonymous/buyer/owner.
+- [x] 5.2 `src/modules/packs/guards/pack-access.guard.spec.ts`: archived pack → 404.
+- [x] 5.3 Run `pnpm test`, `pnpm test:e2e`, `pnpm build` green; confirm each spec scenario.

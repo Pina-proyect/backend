@@ -362,7 +362,9 @@ export class PaymentsService {
                 data: {
                   userId,
                   packId,
-                  type: 'PACK',
+                  // Tipo normalizado 'purchase' (spec packs-unlock): históricamente
+                  // se escribía 'PACK'; el backfill normaliza las filas viejas.
+                  type: 'purchase',
                 },
               });
               console.log(
