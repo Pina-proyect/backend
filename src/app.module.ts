@@ -16,6 +16,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { DonationsModule } from './modules/donations/donations.module';
 import { NotificationModule } from './modules/notifications/notification.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { WithdrawalsModule } from './modules/withdrawals/withdrawals.module';
 import { CacheModule } from './common/cache/cache.module';
 import { EmailModule } from './modules/email/email.module';
 import { AiModule } from './modules/ai/ai.module';
@@ -58,6 +59,7 @@ function storageDriver(): 'local' | 'r2' {
     DonationsModule,
     NotificationModule,
     AnalyticsModule,
+    WithdrawalsModule,
     CacheModule,
     EmailModule,
     AiModule,

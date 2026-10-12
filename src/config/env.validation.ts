@@ -86,4 +86,10 @@ export const envValidationSchema = Joi.object({
   R2_PUBLIC_BUCKET: requiredWhenR2('R2_PUBLIC_BUCKET'),
   R2_PUBLIC_URL: Joi.string().uri().optional().allow(''),
   R2_ENDPOINT: Joi.string().uri().optional().allow(''),
+  // ── Retiros (v1.27) ───────────────────────────────────
+  // Token de administración para PATCH /withdrawals/:id/status. Opcional y
+  // vacío por defecto: el guard `WithdrawalsAdminGuard` es fail-closed (401).
+  WITHDRAWALS_ADMIN_TOKEN: Joi.string().optional().allow(''),
+  // Monto mínimo de retiro en ARS (0 = sin mínimo en el MVP)
+  WITHDRAWAL_MIN_AMOUNT: Joi.number().default(0),
 });
