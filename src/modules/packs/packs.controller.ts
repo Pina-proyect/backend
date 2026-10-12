@@ -50,7 +50,9 @@ export class PacksController {
   @Get('my-packs')
   @UseGuards(AuthGuard('jwt'))
   async getMyPacks(@Req() req: AuthenticatedRequest) {
-    return this.packsService.getMyPacks(req.user.id);
+    // Dueño autenticado → proyección firmada (videos presignados, REQ-SVD-3).
+    const packs = await this.packsService.getMyPacks(req.user.id);
+    return this.urlResolver.resolvePacks(packs);
   }
 
   @Get('categories')
@@ -60,7 +62,9 @@ export class PacksController {
 
   @Get('public/:slug')
   async getCreatorPacks(@Param('slug') slug: string) {
-    return this.packsService.getPacksByCreatorSlug(slug);
+    // Público → proyección pública (videos blanqueados, REQ-SVD-3).
+    const packs = await this.packsService.getPacksByCreatorSlug(slug);
+    return this.urlResolver.toPublicPacks(packs);
   }
 
   @Get(':id')
@@ -68,7 +72,7 @@ export class PacksController {
     const pack = await this.packsService.getPackById(id);
 
     // Público: imágenes/covers visibles; videos privados → URL en blanco.
-    const publicMedia = this.urlResolver.toPublicMany(pack.media);
+    const publicMedia = this.urlResolver.toPublicItems(pack.media);
 
     return {
       ...pack,
@@ -82,7 +86,7 @@ export class PacksController {
   async getPackContent(@Param('id') id: string) {
     // Retorna el pack completo con URLs resueltas si el guard autoriza el acceso.
     const pack = await this.packsService.getPackById(id);
-    const media = await this.urlResolver.resolveMany(pack.media);
+    const media = await this.urlResolver.resolveItems(pack.media);
     return {
       ...pack,
       media,
